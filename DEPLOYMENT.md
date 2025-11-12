@@ -1,0 +1,199 @@
+# Cointribute Smart Contracts Deployment
+
+## Deployment Summary
+
+**Network:** Base Sepolia Testnet (ChainID: 84532)
+**Deployment Date:** November 12, 2025
+**Deployer Address:** `0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4`
+**Total Gas Used:** ~0.03 ETH
+
+---
+
+## Deployed Contracts
+
+### 1. CharityRegistry
+- **Contract Address:** `0xf8359A66337A0F5973283b7f09dD9Bd704fCD2a4`
+- **Verified on Basescan:** ✅ https://sepolia.basescan.org/address/0xf8359A66337A0F5973283b7f09dD9Bd704fCD2a4#code
+- **Purpose:** Manages charity registration, AI-powered vetting, and multi-sig approval process
+- **Key Features:**
+  - Charity registration with IPFS document storage
+  - AI vetting scores (0-100)
+  - Multi-signature verification process
+  - Charity status management (Pending, Approved, Rejected, Suspended)
+  - Role-based access control (ADMIN_ROLE, VERIFIER_ROLE)
+
+### 2. VibeToken (VIBE)
+- **Contract Address:** `0xb53FA792FbdAB539DdA647de56E7ee7b8D4ab0AA`
+- **Verified on Basescan:** ✅ https://sepolia.basescan.org/address/0xb53FA792FbdAB539DdA647de56E7ee7b8D4ab0AA#code
+- **Token Symbol:** VIBE
+- **Token Name:** Vibe Coin
+- **Max Supply:** 1,000,000,000 VIBE
+- **Initial Supply:** 100,000,000 VIBE (10% of max supply minted to treasury)
+- **Purpose:** ERC20 governance and reward token for the Cointribute platform
+- **Key Features:**
+  - Donation rewards (10 VIBE per 1 ETH donated)
+  - Staking with tiered APY rates (5%, 10%, 15%)
+  - Lock periods: 30, 90, 180 days
+  - Burnable for platform fees
+  - Role-based minting (MINTER_ROLE)
+
+### 3. ImpactNFT
+- **Contract Address:** `0xc5711c2Fe962f22315e2681d445FAb8AE50a17E7`
+- **Verified on Basescan:** ✅ https://sepolia.basescan.org/address/0xc5711c2Fe962f22315e2681d445FAb8AE50a17E7#code
+- **Token Symbol:** IMPACT
+- **Token Name:** Cointribute Impact NFT
+- **Base URI:** `https://api.cointribute.xyz/metadata`
+- **Purpose:** ERC721 NFTs representing donor impact with dynamic tiers
+- **Key Features:**
+  - Dynamic NFT tiers based on donation amounts:
+    - Bronze: 1-5 ETH
+    - Silver: 5-10 ETH
+    - Gold: 10-50 ETH
+    - Platinum: 50+ ETH
+  - Auto-upgradable tiers as donations increase
+  - IPFS metadata support
+  - Impact tracking per donor
+
+### 4. DonationManager
+- **Contract Address:** `0xD14000D3eeE85E9cD44Ae686fA7718aE9aA6019F`
+- **Verified on Basescan:** ✅ https://sepolia.basescan.org/address/0xD14000D3eeE85E9cD44Ae686fA7718aE9aA6019F#code
+- **Purpose:** Core contract managing all donations and coordinating the platform
+- **Fee Collector:** `0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4` (deployer address)
+- **Platform Fee:** 2.5% (250 basis points)
+- **Key Features:**
+  - ETH and ERC20 donation support
+  - Automatic VIBE reward distribution
+  - Automatic Impact NFT minting (threshold: 1 ETH)
+  - Recurring donation subscriptions
+  - Platform fee collection
+  - Integration with all other contracts
+
+---
+
+## Contract Interactions
+
+### Roles & Permissions
+
+**VibeToken:**
+- `MINTER_ROLE`: Granted to DonationManager (0xD14000D3eeE85E9cD44Ae686fA7718aE9aA6019F)
+- `ADMIN_ROLE`: Deployer (0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4)
+
+**ImpactNFT:**
+- `MINTER_ROLE`: Granted to DonationManager (0xD14000D3eeE85E9cD44Ae686fA7718aE9aA6019F)
+- `ADMIN_ROLE`: Deployer (0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4)
+
+**CharityRegistry:**
+- `ADMIN_ROLE`: Deployer (0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4)
+- `VERIFIER_ROLE`: Deployer (0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4)
+
+---
+
+## Deployment Flow
+
+1. **CharityRegistry** deployed first (no dependencies)
+2. **VibeToken** deployed (no dependencies)
+3. **ImpactNFT** deployed (no dependencies)
+4. **DonationManager** deployed (requires addresses of all three contracts)
+5. Granted `MINTER_ROLE` to DonationManager in VibeToken
+6. Granted `MINTER_ROLE` to DonationManager in ImpactNFT
+
+---
+
+## Testing Instructions
+
+### For Donors
+
+1. **Make a Donation:**
+   - Call `donateETH(charityId)` on DonationManager with ETH
+   - Automatically receive VIBE rewards (10 VIBE per 1 ETH)
+   - Receive Impact NFT if donation >= 1 ETH
+
+2. **Stake VIBE Tokens:**
+   - Approve DonationManager to spend VIBE
+   - Call `stake(amount, lockPeriod)` on VibeToken
+   - Lock periods: 30, 90, or 180 days
+   - Earn APY: 5%, 10%, or 15% respectively
+
+### For Charities
+
+1. **Register a Charity:**
+   - Call `registerCharity(name, description, ipfsHash, walletAddress)` on CharityRegistry
+   - Provide IPFS hash with 501(c)(3) documents
+   - Wait for AI vetting and multi-sig approval
+
+2. **Check Charity Status:**
+   - Call `getCharity(charityId)` on CharityRegistry
+   - Check `status` field (0=Pending, 1=Approved, 2=Rejected, 3=Suspended)
+
+### For Verifiers
+
+1. **Update AI Score:**
+   - Call `updateAiScore(charityId, score)` on CharityRegistry
+   - Score must be 0-100
+
+2. **Approve Charity:**
+   - Call `approveCharity(charityId)` on CharityRegistry
+   - Requires minimum AI score of 60
+   - Requires 2 approvals (multi-sig)
+
+---
+
+## Important Links
+
+### Block Explorer
+- **Base Sepolia Basescan:** https://sepolia.basescan.org/
+- **Base Sepolia Faucet:** https://www.coinbase.com/faucets/base-ethereum-goerli-faucet
+
+### Contract Verification
+All contracts are verified and their source code is viewable on Basescan. You can interact with them directly through the "Write Contract" tab on Basescan.
+
+### IPFS for Metadata
+- Impact NFT metadata should be uploaded to IPFS
+- Base URI is set to: `https://api.cointribute.xyz/metadata`
+- Can be updated by admin using `setBaseMetadataURI()`
+
+---
+
+## Security Considerations
+
+1. **Access Control:** All sensitive functions protected by role-based access control
+2. **Reentrancy Protection:** All external calls use `nonReentrant` modifier
+3. **Max Supply Cap:** VIBE token has a hard cap of 1B tokens
+4. **Fee Limits:** Platform fee capped at 10% maximum
+5. **Multi-sig Verification:** Charities require 2 approvals before activation
+
+---
+
+## Next Steps
+
+### For Seedify Vibecoins Hackathon Submission
+
+1. ✅ Contracts deployed to Base Sepolia
+2. ✅ All contracts verified on Basescan
+3. ✅ Documentation prepared
+4. 🔄 Frontend integration (in progress)
+5. 🔄 Backend API development (in progress)
+6. 🔄 Demo video creation
+7. 🔄 GitHub repository finalization
+
+### Additional Enhancements
+
+- Set up Chainlink oracle for AI vetting automation
+- Deploy to Base Mainnet when ready
+- Implement governance voting with VIBE tokens
+- Create Impact NFT artwork and metadata
+- Set up automated charity verification pipeline
+
+---
+
+## Support
+
+For questions or issues, contact:
+- GitHub: https://github.com/[your-repo]
+- Email: [your-email]
+
+---
+
+**Built with Vibe Coding using Claude Code for the Seedify Vibecoins Hackathon**
+
+*Smart contracts built using AI-assisted development tools as part of the Seedify Vibecoins initiative to accelerate blockchain application development.*
