@@ -35,6 +35,8 @@ contract CharityRegistry is AccessControl, ReentrancyGuard {
         address verifiedBy;
         uint256 totalDonationsReceived;
         uint256 donorCount;
+        uint256 fundingGoal; // Target amount to raise in wei
+        uint256 deadline; // Fundraising deadline (0 = no deadline)
         bool isActive;
     }
 
@@ -104,18 +106,26 @@ contract CharityRegistry is AccessControl, ReentrancyGuard {
      * @param _description Charity description
      * @param _ipfsHash IPFS hash containing charity documents
      * @param _walletAddress Wallet to receive donations
+     * @param _fundingGoal Target amount to raise (in wei)
+     * @param _deadline Fundraising deadline (timestamp, 0 for no deadline)
      * @return charityId The ID of the newly registered charity
      */
     function registerCharity(
         string memory _name,
         string memory _description,
         string memory _ipfsHash,
-        address _walletAddress
+        address _walletAddress,
+        uint256 _fundingGoal,
+        uint256 _deadline
     ) external nonReentrant returns (uint256) {
         require(bytes(_name).length > 0, "Name cannot be empty");
         require(bytes(_ipfsHash).length > 0, "IPFS hash required");
         require(_walletAddress != address(0), "Invalid wallet address");
         require(!isRegistered[_walletAddress], "Charity already registered");
+        require(_fundingGoal > 0, "Funding goal must be greater than 0");
+        if (_deadline > 0) {
+            require(_deadline > block.timestamp, "Deadline must be in the future");
+        }
 
         uint256 charityId = charityCount++;
 
@@ -131,6 +141,8 @@ contract CharityRegistry is AccessControl, ReentrancyGuard {
             verifiedBy: address(0),
             totalDonationsReceived: 0,
             donorCount: 0,
+            fundingGoal: _fundingGoal,
+            deadline: _deadline,
             isActive: true
         });
 
