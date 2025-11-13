@@ -1,18 +1,22 @@
 'use client';
 
 import { MainLayout } from '@/components/MainLayout';
-import { charityRegistry, donationManager } from '@/lib/contracts';
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { charityRegistry, donationManager, usdc, CONTRACT_ADDRESSES } from '@/lib/contracts';
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
 import { useState, useEffect } from 'react';
-import { parseEther, formatEther } from 'viem';
+import { parseEther, formatEther, parseUnits, formatUnits } from 'viem';
 import { useSearchParams } from 'next/navigation';
+
+type Currency = 'ETH' | 'USDC';
 
 export default function DonatePage() {
   const searchParams = useSearchParams();
   const preselectedCharityId = searchParams.get('charity');
+  const { address } = useAccount();
 
   const [selectedCharityId, setSelectedCharityId] = useState<string>(preselectedCharityId || '');
   const [donationAmount, setDonationAmount] = useState('');
+  const [currency, setCurrency] = useState<Currency>('ETH');
 
   const { data: charityCount } = useReadContract({
     ...charityRegistry,
@@ -30,11 +34,47 @@ export default function DonatePage() {
     },
   });
 
+  // Read USDC balance
+  const { data: usdcBalance } = useReadContract({
+    ...usdc,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: { enabled: !!address && currency === 'USDC' },
+  });
+
+  // Read USDC allowance
+  const { data: usdcAllowance } = useReadContract({
+    ...usdc,
+    functionName: 'allowance',
+    args: address ? [address, CONTRACT_ADDRESSES.DonationManager] : undefined,
+    query: { enabled: !!address && currency === 'USDC' },
+  });
+
+  const { writeContract: approveWrite, data: approveHash } = useWriteContract();
   const { writeContract, data: hash, isPending, error } = useWriteContract();
 
+  const { isSuccess: approveSuccess } = useWaitForTransactionReceipt({ hash: approveHash });
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
   });
+
+  const [needsApproval, setNeedsApproval] = useState(false);
+
+  // Check if approval is needed for USDC
+  useEffect(() => {
+    if (currency === 'USDC' && donationAmount && usdcAllowance !== undefined) {
+      const amountInUnits = parseUnits(donationAmount, 6); // USDC has 6 decimals
+      setNeedsApproval(usdcAllowance < amountInUnits);
+    } else {
+      setNeedsApproval(false);
+    }
+  }, [currency, donationAmount, usdcAllowance]);
+
+  useEffect(() => {
+    if (approveSuccess) {
+      setNeedsApproval(false);
+    }
+  }, [approveSuccess]);
 
   useEffect(() => {
     if (isSuccess) {
@@ -43,19 +83,49 @@ export default function DonatePage() {
     }
   }, [isSuccess]);
 
+  const handleApprove = async () => {
+    if (!donationAmount || currency !== 'USDC') return;
+
+    try {
+      const amountInUnits = parseUnits(donationAmount, 6);
+      approveWrite({
+        ...usdc,
+        functionName: 'approve',
+        args: [CONTRACT_ADDRESSES.DonationManager, amountInUnits],
+      });
+    } catch (err) {
+      console.error('Approval error:', err);
+    }
+  };
+
   const handleDonate = async () => {
     if (!selectedCharityId || !donationAmount) {
       alert('Please select a charity and enter an amount');
       return;
     }
 
+    if (currency === 'USDC' && needsApproval) {
+      alert('Please approve USDC first');
+      return;
+    }
+
     try {
-      writeContract({
-        ...donationManager,
-        functionName: 'donateETH',
-        args: [BigInt(selectedCharityId)],
-        value: parseEther(donationAmount),
-      });
+      if (currency === 'ETH') {
+        writeContract({
+          ...donationManager,
+          functionName: 'donateETH',
+          args: [BigInt(selectedCharityId)],
+          value: parseEther(donationAmount),
+        });
+      } else {
+        // USDC donation
+        const amountInUnits = parseUnits(donationAmount, 6); // USDC has 6 decimals
+        writeContract({
+          ...donationManager,
+          functionName: 'donateERC20',
+          args: [BigInt(selectedCharityId), CONTRACT_ADDRESSES.USDC, amountInUnits],
+        });
+      }
     } catch (err) {
       console.error('Donation error:', err);
     }
@@ -100,7 +170,7 @@ export default function DonatePage() {
                   id="charity"
                   value={selectedCharityId}
                   onChange={(e) => setSelectedCharityId(e.target.value)}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border text-gray-900"
                 >
                   <option value="">Choose a charity...</option>
                   {Array.from({ length: totalCharities }, (_, i) => (
@@ -121,10 +191,48 @@ export default function DonatePage() {
                 </div>
               )}
 
+              {/* Currency Selection */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Select Currency
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setCurrency('ETH')}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      currency === 'ETH'
+                        ? 'border-blue-600 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-lg font-bold text-gray-900">ETH</div>
+                    <div className="text-xs text-gray-500">Ethereum</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrency('USDC')}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      currency === 'USDC'
+                        ? 'border-blue-600 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-lg font-bold text-gray-900">USDC</div>
+                    <div className="text-xs text-gray-500">USD Coin</div>
+                    {currency === 'USDC' && usdcBalance && (
+                      <div className="text-xs text-blue-600 mt-1">
+                        Balance: {formatUnits(usdcBalance, 6)}
+                      </div>
+                    )}
+                  </button>
+                </div>
+              </div>
+
               {/* Donation Amount */}
               <div className="mb-6">
                 <label htmlFor="amount" className="block text-sm font-medium text-gray-900 mb-2">
-                  Cointribution Amount (ETH)
+                  Cointribution Amount ({currency})
                 </label>
                 <div className="relative">
                   <input
@@ -135,22 +243,35 @@ export default function DonatePage() {
                     value={donationAmount}
                     onChange={(e) => setDonationAmount(e.target.value)}
                     placeholder="0.1"
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border"
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border text-gray-900 placeholder:text-gray-400"
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <span className="text-gray-500 sm:text-sm">ETH</span>
+                    <span className="text-gray-500 sm:text-sm font-semibold">{currency}</span>
                   </div>
                 </div>
                 <div className="mt-2 flex gap-2">
-                  {['0.01', '0.05', '0.1', '0.5', '1'].map((amount) => (
-                    <button
-                      key={amount}
-                      onClick={() => setDonationAmount(amount)}
-                      className="px-3 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700"
-                    >
-                      {amount} ETH
-                    </button>
-                  ))}
+                  {currency === 'ETH'
+                    ? ['0.01', '0.05', '0.1', '0.5', '1'].map((amount) => (
+                        <button
+                          key={amount}
+                          type="button"
+                          onClick={() => setDonationAmount(amount)}
+                          className="px-3 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium"
+                        >
+                          {amount}
+                        </button>
+                      ))
+                    : ['10', '50', '100', '500', '1000'].map((amount) => (
+                        <button
+                          key={amount}
+                          type="button"
+                          onClick={() => setDonationAmount(amount)}
+                          className="px-3 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium"
+                        >
+                          {amount}
+                        </button>
+                      ))
+                  }
                 </div>
               </div>
 
@@ -160,22 +281,30 @@ export default function DonatePage() {
                   <h4 className="font-semibold text-gray-900 mb-3">Transaction Breakdown</h4>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-700">Your cointribution:</span>
-                    <span className="font-medium text-gray-900">{donationAmount} ETH</span>
+                    <span className="font-medium text-gray-900">{donationAmount} {currency}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-700">Platform fee (2.5%):</span>
-                    <span className="font-medium text-gray-600">-{platformFee} ETH</span>
+                    <span className="font-medium text-gray-600">-{platformFee} {currency}</span>
                   </div>
                   <div className="border-t pt-2 flex justify-between text-sm">
                     <span className="text-gray-900 font-semibold">Cause receives:</span>
-                    <span className="font-semibold text-green-600">{netDonation} ETH</span>
+                    <span className="font-semibold text-green-600">{netDonation} {currency}</span>
                   </div>
                   <div className="mt-4 pt-4 border-t">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">VIBE rewards:</span>
                       <span className="font-semibold text-purple-600">+{vibeReward} VIBE</span>
                     </div>
-                    {parseFloat(donationAmount) >= 1 && (
+                    {currency === 'ETH' && parseFloat(donationAmount) >= 1 && (
+                      <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
+                        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        <span>Eligible for Impact NFT!</span>
+                      </div>
+                    )}
+                    {currency === 'USDC' && parseFloat(donationAmount) >= 3000 && (
                       <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
                         <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -207,16 +336,27 @@ export default function DonatePage() {
                 </div>
               )}
 
-              {/* Cointribute Button */}
-              <button
-                onClick={handleDonate}
-                disabled={!selectedCharityId || !donationAmount || isPending || isConfirming}
-                className="w-full rounded-md bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isPending ? 'Confirm in wallet...' :
-                 isConfirming ? 'Processing...' :
-                 'Cointribute Now'}
-              </button>
+              {/* Approve/Cointribute Buttons */}
+              <div className="space-y-2">
+                {currency === 'USDC' && needsApproval && (
+                  <button
+                    onClick={handleApprove}
+                    disabled={!donationAmount || approveHash !== undefined}
+                    className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {approveHash ? 'Approving...' : 'Approve USDC'}
+                  </button>
+                )}
+                <button
+                  onClick={handleDonate}
+                  disabled={!selectedCharityId || !donationAmount || isPending || isConfirming || (currency === 'USDC' && needsApproval)}
+                  className="w-full rounded-md bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isPending ? 'Confirm in wallet...' :
+                   isConfirming ? 'Processing...' :
+                   `Cointribute ${currency} Now`}
+                </button>
+              </div>
 
               <p className="mt-4 text-xs text-center text-gray-500">
                 Make sure you're connected to Base Sepolia network

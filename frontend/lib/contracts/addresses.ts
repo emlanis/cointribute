@@ -9,6 +9,8 @@ export const CONTRACT_ADDRESSES = {
   VibeToken: '0x34a4fd87D99D14817289CA4348559c72aF74F367' as `0x${string}`,
   ImpactNFT: '0x00dFc2353485a56ee554da65F6bD1Ba8aFEF1C89' as `0x${string}`,
   DonationManager: '0x2b1F4bFc8DC29e96e86c5E2A85b48D5920f63fe7' as `0x${string}`,
+  // USDC on Base Sepolia
+  USDC: '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as `0x${string}`,
 } as const;
 
 export const DEPLOYER_ADDRESS = '0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4' as `0x${string}`;

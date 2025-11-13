@@ -3,6 +3,7 @@
 import { MainLayout } from '@/components/MainLayout';
 import { charityRegistry } from '@/lib/contracts';
 import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
+import { parseEther } from 'viem';
 import { useState, useEffect } from 'react';
 
 export default function RegisterCharityPage() {
