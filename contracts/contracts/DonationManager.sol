@@ -26,6 +26,9 @@ contract DonationManager is AccessControl, ReentrancyGuard {
     VibeToken public vibeToken;
     ImpactNFT public impactNFT;
 
+    // Supported tokens (Base Sepolia USDC)
+    address public constant USDC_TOKEN = 0x036CbD53842c5426634e7929541eC2318f3dCF7e;
+
     // Platform fee (in basis points: 250 = 2.5%)
     uint256 public platformFeeBps = 250;
     uint256 public constant MAX_FEE_BPS = 1000; // 10% maximum
@@ -264,8 +267,8 @@ contract DonationManager is AccessControl, ReentrancyGuard {
         totalDonationsValue += _amount;
         totalPlatformFees += fee;
 
-        // Record donation in CharityRegistry
-        charityRegistry.recordDonation(_charityId, _amount);
+        // Record donation in CharityRegistry with token info
+        charityRegistry.recordDonation(_charityId, _amount, _token);
 
         // Mint NFT if threshold reached
         if (_amount >= nftThreshold) {

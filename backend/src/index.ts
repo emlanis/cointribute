@@ -1,10 +1,10 @@
+// Load environment variables FIRST
+import './env';
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import { BlockchainListener } from './services/blockchainListener';
-
-// Load environment variables
-dotenv.config();
+import { coinMarketCapService } from './services/coinMarketCapService';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -28,6 +28,53 @@ app.get('/api/stats', async (req, res) => {
     message: 'Stats endpoint - coming soon',
     // TODO: Add verification stats from database
   });
+});
+
+// Price conversion endpoints
+app.get('/api/prices/:symbol', async (req, res) => {
+  try {
+    const { symbol } = req.params;
+    const price = await coinMarketCapService.getPrice(symbol.toUpperCase());
+
+    if (price === null) {
+      return res.status(404).json({ error: `Price not found for ${symbol}` });
+    }
+
+    res.json({ symbol: symbol.toUpperCase(), price_usd: price });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch price' });
+  }
+});
+
+app.get('/api/prices', async (req, res) => {
+  try {
+    const symbols = (req.query.symbols as string)?.split(',') || ['ETH', 'USDC'];
+    const prices = await coinMarketCapService.getPrices(symbols.map(s => s.toUpperCase()));
+
+    const result: any = {};
+    prices.forEach((price, symbol) => {
+      result[symbol] = price;
+    });
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch prices' });
+  }
+});
+
+app.post('/api/convert-to-usd', async (req, res) => {
+  try {
+    const { ethAmount = '0', usdcAmount = '0' } = req.body;
+    const result = await coinMarketCapService.getTotalUSD(ethAmount, usdcAmount);
+
+    if (result === null) {
+      return res.status(500).json({ error: 'Failed to calculate USD value' });
+    }
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to convert to USD' });
+  }
 });
 
 // Start server

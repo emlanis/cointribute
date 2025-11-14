@@ -1,5 +1,5 @@
 export const CONTRACT_ADDRESSES = {
-  CharityRegistry: '0x0cA13eB99B282Cd23490B34C51dF9cBBD8528828',
+  CharityRegistry: '0x1D7503fCC34eD0e16CDEE2EbCdE02B5a1A598DBF',
 } as const;
 
 export const CHARITY_REGISTRY_ABI = [
@@ -40,7 +40,9 @@ export const CHARITY_REGISTRY_ABI = [
           {"name": "donorCount", "type": "uint256"},
           {"name": "fundingGoal", "type": "uint256"},
           {"name": "deadline", "type": "uint256"},
-          {"name": "isActive", "type": "bool"}
+          {"name": "isActive", "type": "bool"},
+          {"name": "totalETHDonations", "type": "uint256"},
+          {"name": "totalUSDCDonations", "type": "uint256"}
         ],
         "name": "charity",
         "type": "tuple"

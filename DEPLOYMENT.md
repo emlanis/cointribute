@@ -71,6 +71,31 @@
 
 ---
 
+## Price Conversion Service
+
+### CoinMarketCap API Integration
+- **Status:** ✅ Fully Operational
+- **API:** CoinMarketCap Pro API
+- **Purpose:** Real-time cryptocurrency price conversion to USD
+- **Cache Duration:** 60 seconds (reduces API calls)
+- **Supported Tokens:** ETH, USDC (stablecoins return 1:1)
+
+**Architecture:**
+- Node.js service integrated into backend
+- RESTful API endpoint: `/api/prices?symbols=ETH,USDC`
+- In-memory caching to optimize API usage
+- Fallback to $2500 ETH if API unavailable
+- Used by frontend for unified USD display
+
+**Key Features:**
+- Fetches live cryptocurrency prices
+- Converts donations to USD equivalent for display
+- Combines ETH and USDC donations into single USD total
+- Auto-refreshes frontend prices every 60 seconds
+- Handles API rate limiting gracefully
+
+---
+
 ## AI Verification Backend
 
 ### Automated Charity Verification System
@@ -228,16 +253,19 @@ All contracts are verified and their source code is viewable on Basescan. You ca
 
 - ✅ Automated AI charity verification with GPT-4
 - ✅ Full-stack integration (Frontend + Backend + Blockchain)
-- ✅ ETH and USDC donation support
+- ✅ ETH and USDC donation support with separate tracking
 - ✅ Dynamic token preference system
 - ✅ Fundraising goals and progress tracking
 - ✅ Cause detail pages with social sharing
 - ✅ Real-time blockchain event monitoring
 - ✅ Transaction debugging and error handling
+- ✅ **Multi-currency USD conversion with CoinMarketCap API**
+- ✅ **Real-time ETH/USDC price fetching (60-second refresh)**
+- ✅ **Unified USD display for all donations**
+- ✅ **Price conversion utilities and React hooks**
 
 ### Next Enhancements
 
-- 🔄 Multi-currency conversion with CoinMarketCap API
 - ⏸️ Deploy to Base Mainnet when ready
 - ⏸️ Implement governance voting with VIBE tokens
 - ⏸️ Create Impact NFT artwork and metadata

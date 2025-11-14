@@ -33,11 +33,13 @@ contract CharityRegistry is AccessControl, ReentrancyGuard {
         uint256 registeredAt;
         uint256 verifiedAt;
         address verifiedBy;
-        uint256 totalDonationsReceived;
+        uint256 totalDonationsReceived; // Total in wei (backward compatible)
         uint256 donorCount;
         uint256 fundingGoal; // Target amount to raise in wei
         uint256 deadline; // Fundraising deadline (0 = no deadline)
         bool isActive;
+        uint256 totalETHDonations; // Track ETH donations separately
+        uint256 totalUSDCDonations; // Track USDC donations separately (in USDC base units)
     }
 
     // Storage
@@ -143,7 +145,9 @@ contract CharityRegistry is AccessControl, ReentrancyGuard {
             donorCount: 0,
             fundingGoal: _fundingGoal,
             deadline: _deadline,
-            isActive: true
+            isActive: true,
+            totalETHDonations: 0,
+            totalUSDCDonations: 0
         });
 
         charityIdByAddress[_walletAddress] = charityId;
@@ -250,8 +254,9 @@ contract CharityRegistry is AccessControl, ReentrancyGuard {
      * @notice Record a donation to a charity (called by DonationManager)
      * @param _charityId Charity ID
      * @param _amount Donation amount
+     * @param _token Token address (address(0) for ETH)
      */
-    function recordDonation(uint256 _charityId, uint256 _amount)
+    function recordDonation(uint256 _charityId, uint256 _amount, address _token)
         external
     {
         require(_charityId < charityCount, "Invalid charity ID");
@@ -259,6 +264,14 @@ contract CharityRegistry is AccessControl, ReentrancyGuard {
 
         charity.totalDonationsReceived += _amount;
         charity.donorCount++;
+
+        // Track ETH and USDC separately
+        if (_token == address(0)) {
+            charity.totalETHDonations += _amount;
+        } else {
+            // Assuming USDC token (can add validation if needed)
+            charity.totalUSDCDonations += _amount;
+        }
 
         emit DonationRecorded(
             _charityId,
@@ -371,5 +384,21 @@ contract CharityRegistry is AccessControl, ReentrancyGuard {
      */
     function getTotalCharities() external view returns (uint256) {
         return charityCount;
+    }
+
+    /**
+     * @notice Get separate ETH and USDC donations for a charity
+     * @param _charityId Charity ID
+     * @return ethAmount Total ETH donations in wei
+     * @return usdcAmount Total USDC donations in USDC base units (6 decimals)
+     */
+    function getCharityDonationsByToken(uint256 _charityId)
+        external
+        view
+        returns (uint256 ethAmount, uint256 usdcAmount)
+    {
+        require(_charityId < charityCount, "Invalid charity ID");
+        Charity memory charity = charities[_charityId];
+        return (charity.totalETHDonations, charity.totalUSDCDonations);
     }
 }

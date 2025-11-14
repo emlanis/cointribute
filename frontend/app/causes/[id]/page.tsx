@@ -6,6 +6,7 @@ import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useAcc
 import { useState, useEffect } from 'react';
 import { parseEther, formatEther, parseUnits, formatUnits } from 'viem';
 import { useParams } from 'next/navigation';
+import { useUSDCEquivalent } from '@/hooks/usePriceConversion';
 
 type Currency = 'ETH' | 'USDC';
 
@@ -21,6 +22,13 @@ export default function CauseDetailPage() {
     functionName: 'getCharity',
     args: [BigInt(causeId)],
   });
+
+  // Get ETH and USDC amounts from contract (use default values if charity not loaded yet)
+  const ethDonations = charity?.totalETHDonations || BigInt(0);
+  const usdcDonations = charity?.totalUSDCDonations || BigInt(0);
+
+  // Convert to USDC equivalent - MUST be called before any early returns
+  const { totalUSDC, loading: priceLoading, ethPrice } = useUSDCEquivalent(ethDonations, usdcDonations);
 
   // Read USDC balance
   const { data: usdcBalance } = useReadContract({
@@ -131,10 +139,14 @@ export default function CauseDetailPage() {
   const preferredToken = preferredTokenMatch ? preferredTokenMatch[1] : 'ETH';
 
   const isVerified = charity.status === 1 && charity.isActive;
-  const totalRaised = formatEther(charity.totalDonationsReceived);
-  const fundingGoal = formatEther(charity.fundingGoal);
-  const percentRaised = (Number(totalRaised) / Number(fundingGoal)) * 100;
-  const remainingAmount = Number(fundingGoal) - Number(totalRaised);
+
+  // Funding goal is stored in wei but represents USDC target (not ETH)
+  // Convert from wei to USDC display value (treating it as USDC base units)
+  const fundingGoalWei = charity.fundingGoal;
+  const fundingGoalUSDC = Number(fundingGoalWei) / 1e18; // Treat as USDC amount, not to be converted
+
+  const percentRaised = (totalUSDC / fundingGoalUSDC) * 100;
+  const targetAmount = fundingGoalUSDC; // Use 'target' instead of 'remaining'
 
   // Calculate time remaining
   const now = Math.floor(Date.now() / 1000);
@@ -192,8 +204,10 @@ export default function CauseDetailPage() {
               <div className="mb-4">
                 <div className="flex justify-between items-baseline mb-2">
                   <div>
-                    <span className="text-3xl font-bold text-gray-900">{Number(totalRaised).toFixed(4)} {preferredToken}</span>
-                    <span className="text-gray-600 ml-2">raised of {Number(fundingGoal).toFixed(2)} {preferredToken} goal</span>
+                    <span className="text-3xl font-bold text-gray-900">
+                      {priceLoading ? '...' : `$${totalUSDC.toFixed(2)}`}
+                    </span>
+                    <span className="text-gray-600 ml-2">raised of ${fundingGoalUSDC.toFixed(2)} goal</span>
                   </div>
                   <span className="text-lg font-semibold text-purple-600">{percentRaised.toFixed(1)}%</span>
                 </div>
@@ -215,9 +229,9 @@ export default function CauseDetailPage() {
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-gray-900">
-                    {remainingAmount > 0 ? remainingAmount.toFixed(2) : '0'} {preferredToken}
+                    {priceLoading ? '...' : `$${targetAmount.toFixed(2)}`}
                   </div>
-                  <div className="text-sm text-gray-600">Remaining</div>
+                  <div className="text-sm text-gray-600">Target</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-gray-900">

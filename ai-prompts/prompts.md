@@ -389,6 +389,143 @@ const [queryClient] = useState(() => new QueryClient({...}));
 
 ---
 
+## Multi-Currency Conversion & Price Integration Prompts
+
+### Prompt 13: Multi-Currency Smart Contract Updates
+**Date**: 2025-11-14 (Evening)
+**Purpose**: Add separate ETH/USDC tracking to contracts
+**Prompt**:
+```
+Update CharityRegistry and DonationManager contracts to support multi-currency:
+- Add totalETHDonations and totalUSDCDonations fields to CharityRegistry
+- Update DonationManager to pass token information when recording donations
+- Maintain backwards compatibility with existing contracts
+- Update events to include token information
+- Redeploy to Base Sepolia
+```
+
+**Output**: Contracts updated and deployed with separate currency tracking
+
+---
+
+### Prompt 14: CoinMarketCap API Integration
+**Date**: 2025-11-14 (Evening)
+**Purpose**: Integrate real-time cryptocurrency price conversion
+**Prompt**:
+```
+Create a CoinMarketCap API service in the backend that:
+- Fetches current ETH and USDC prices from CoinMarketCap Pro API
+- Implements 60-second in-memory caching to reduce API calls
+- Returns stablecoin prices (USDC, USDT, DAI) as 1:1 with USD
+- Provides RESTful endpoint: /api/prices?symbols=ETH,USDC
+- Handles API errors gracefully with fallback prices
+- Loads API key from environment variables securely
+```
+
+**Output**: Backend service with `/api/prices` endpoint returning live cryptocurrency prices
+
+---
+
+### Prompt 15: Frontend Price Conversion Utilities
+**Date**: 2025-11-14 (Evening)
+**Purpose**: Create utilities for converting crypto amounts to USD
+**Prompt**:
+```
+Create frontend utilities for price conversion:
+- lib/priceConversion.ts with functions:
+  - fetchPrices(): Get ETH/USDC prices from backend
+  - ethToUSDC(ethWei, ethPrice): Convert ETH amount to USD
+  - usdcToDisplay(usdcBaseUnits): Convert USDC units to display value
+  - getTotalInUSDC(): Combine ETH and USDC donations in USD
+- Implement client-side caching (60 seconds)
+- Handle API failures with fallback prices ($2500 ETH default)
+```
+
+**Output**: Utility functions for converting blockchain amounts to USD equivalents
+
+---
+
+### Prompt 16: React Price Hooks
+**Date**: 2025-11-14 (Evening)
+**Purpose**: Create React hooks for fetching and converting prices
+**Prompt**:
+```
+Create React hooks for price conversion:
+- hooks/usePriceConversion.ts with:
+  - usePrices(): Fetch ETH/USDC prices, auto-refresh every 60 seconds
+  - useUSDCEquivalent(ethWei, usdcUnits): Convert donations to USD equivalent
+- Return loading states for UX
+- Use React Query for efficient data fetching
+- Clean up intervals on unmount
+```
+
+**Output**: React hooks that automatically fetch and refresh cryptocurrency prices
+
+---
+
+### Debug 6: React Hooks Error - Conditional Hook Calls
+**Date**: 2025-11-14 (Evening)
+**Issue**: "Rendered more hooks than during the previous render" error on both homepage and cause detail pages
+**Debugging Prompt**:
+```
+Getting React error: "Rendered more hooks than during the previous render"
+This appears on multiple pages after adding useUSDCEquivalent hook.
+
+Investigate:
+1. Check if hooks are being called conditionally or after early returns
+2. Verify hooks are called in the same order on every render
+3. Look for hooks called inside if statements or after return statements
+```
+
+**Root Cause**: `useUSDCEquivalent` hook was being called AFTER conditional early returns (`if (!charity) return null`), violating React's Rules of Hooks
+
+**Solution**:
+- Move all hook calls to the top of component, before any conditional logic
+- Use optional chaining when accessing data that might not be loaded yet:
+  ```typescript
+  const ethDonations = charity?.totalETHDonations || BigInt(0);
+  const usdcDonations = charity?.totalUSDCDonations || BigInt(0);
+  const { totalUSDC, loading, ethPrice } = useUSDCEquivalent(ethDonations, usdcDonations);
+  // NOW safe to have conditional returns
+  if (!charity) return null;
+  ```
+- Applied fix to 3 components: CauseDetailPage, ContributorRow, FeaturedCauseCard
+
+---
+
+### Debug 7: Funding Goal Displaying Inflated Values
+**Date**: 2025-11-14 (Evening)
+**Issue**: Funding goal of $25,000 USDC displaying as $79,888,503.83
+**Debugging Prompt**:
+```
+User registered charity with $25,000 USDC funding goal.
+Frontend displays goal as "$79,888,503.83" instead of "$25,000.00"
+
+Investigate:
+1. How funding goal is stored in contract (wei format)
+2. How frontend converts wei to display value
+3. Whether funding goal is being multiplied by current ETH price incorrectly
+```
+
+**Root Cause**: Funding goal stored in wei was being treated as ETH and converted to USD:
+- Formula used: `(25000 wei / 1e18) × ETH_price ($3195) = $79,888,503`
+- Should be: `25000 wei / 1e18 = $25,000` (treat as USDC amount, not ETH)
+
+**Solution**:
+- Remove ETH price multiplication from funding goal calculation:
+  ```typescript
+  // OLD (WRONG):
+  const fundingGoalEth = Number(fundingGoalWei) / 1e18;
+  const fundingGoalUSDC = fundingGoalEth * ethPrice;
+
+  // NEW (CORRECT):
+  const fundingGoalUSDC = Number(fundingGoalWei) / 1e18; // Stable USDC target
+  ```
+- Changed label from "Remaining" to "Target" for clarity
+- Applied fix to both cause detail page and homepage featured cards
+
+---
+
 ## Notes
 
 - All prompts are documented in real-time during development
@@ -404,17 +541,18 @@ const [queryClient] = useState(() => new QueryClient({...}));
 
 ## Statistics
 
-**Total Prompts Used**: 19
-- Smart Contract Development: 4 prompts
+**Total Prompts Used**: 23
+- Smart Contract Development: 5 prompts (including multi-currency updates)
 - AI Integration: 2 prompts
-- Frontend Development: 3 prompts
-- Backend Development: 2 prompts
-- Debugging & Bug Fixes: 5 prompts
-- Testing: 3 prompts (TBD)
+- Frontend Development: 5 prompts (including price conversion)
+- Backend Development: 3 prompts (including CoinMarketCap API)
+- Debugging & Bug Fixes: 7 prompts
+- Testing: 1 prompt (TBD)
 
 **Success Rate**: 100% (all features implemented successfully)
-**Major Bugs Fixed**: 5
-**Development Time**: ~48 hours (Nov 12-14, 2025)
-**Lines of Code**: ~3,500+
-**Contracts Deployed**: 4
+**Major Bugs Fixed**: 7
+**Development Time**: ~52 hours (Nov 12-14, 2025)
+**Lines of Code**: ~4,200+
+**Contracts Deployed**: 4 (with 1 major update)
+**Contract Redeployments**: 1 (multi-currency support)
 **AI Model Used**: Claude Sonnet 4.5 (claude-code)

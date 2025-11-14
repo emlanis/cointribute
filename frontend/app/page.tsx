@@ -5,6 +5,7 @@ import { MainLayout } from '@/components/MainLayout';
 import { charityRegistry, donationManager, impactNFT } from '@/lib/contracts';
 import { useReadContract } from 'wagmi';
 import { formatEther } from 'viem';
+import { useUSDCEquivalent } from '@/hooks/usePriceConversion';
 
 export default function Home() {
   // Fetch live blockchain data
@@ -277,9 +278,14 @@ function ContributorRow({ charityId }: { charityId: number }) {
     args: [BigInt(charityId)],
   });
 
-  if (!charity || charity.donorCount === BigInt(0)) return null;
+  // Get ETH and USDC amounts from contract (use defaults if not loaded)
+  const ethDonations = charity?.totalETHDonations || BigInt(0);
+  const usdcDonations = charity?.totalUSDCDonations || BigInt(0);
 
-  const totalDonations = formatEther(charity.totalDonationsReceived);
+  // Convert to USDC equivalent - MUST be called before early returns
+  const { totalUSDC, loading } = useUSDCEquivalent(ethDonations, usdcDonations);
+
+  if (!charity || charity.donorCount === BigInt(0)) return null;
 
   return (
     <div className="p-4 hover:bg-gray-50 transition-colors">
@@ -296,7 +302,9 @@ function ContributorRow({ charityId }: { charityId: number }) {
           </div>
         </div>
         <div className="text-right">
-          <div className="font-bold text-gray-900">{Number(totalDonations).toFixed(4)} ETH</div>
+          <div className="font-bold text-gray-900">
+            {loading ? '...' : `$${totalUSDC.toFixed(2)}`}
+          </div>
           <div className="text-xs text-gray-500">total raised</div>
         </div>
       </div>
@@ -321,14 +329,23 @@ function FeaturedCauseCard({ charityId }: { charityId: number }) {
     args: [BigInt(charityId)],
   });
 
+  // Get ETH and USDC amounts from contract (use defaults if not loaded)
+  const ethDonations = charity?.totalETHDonations || BigInt(0);
+  const usdcDonations = charity?.totalUSDCDonations || BigInt(0);
+
+  // Convert to USDC equivalent - MUST be called before early returns
+  const { totalUSDC, loading, ethPrice } = useUSDCEquivalent(ethDonations, usdcDonations);
+
   if (!charity) return null;
 
   const isVerified = charity.status === 1 && charity.isActive;
   if (!isVerified) return null;
 
-  const totalRaised = formatEther(charity.totalDonationsReceived);
-  const fundingGoal = formatEther(charity.fundingGoal);
-  const percentRaised = (Number(totalRaised) / Number(fundingGoal)) * 100;
+  // Funding goal is stored in wei but represents USDC target (not ETH)
+  const fundingGoalWei = charity.fundingGoal;
+  const fundingGoalUSDC = Number(fundingGoalWei) / 1e18; // Treat as USDC amount, not to be converted
+
+  const percentRaised = (totalUSDC / fundingGoalUSDC) * 100;
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white overflow-hidden hover:shadow-lg transition-shadow">
@@ -342,7 +359,9 @@ function FeaturedCauseCard({ charityId }: { charityId: number }) {
         {/* Progress */}
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-1">
-            <span className="font-semibold text-gray-900">{Number(totalRaised).toFixed(4)} ETH</span>
+            <span className="font-semibold text-gray-900">
+              {loading ? '...' : `$${totalUSDC.toFixed(2)}`}
+            </span>
             <span className="text-gray-600">{percentRaised.toFixed(0)}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
@@ -352,7 +371,7 @@ function FeaturedCauseCard({ charityId }: { charityId: number }) {
             />
           </div>
           <div className="mt-1 text-xs text-gray-500">
-            Goal: {Number(fundingGoal).toFixed(2)} ETH
+            Goal: ${fundingGoalUSDC.toFixed(2)}
           </div>
         </div>
 
