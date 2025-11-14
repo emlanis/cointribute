@@ -126,6 +126,10 @@ export default function CauseDetailPage() {
     );
   }
 
+  // Extract preferred token from description
+  const preferredTokenMatch = charity.description.match(/\[Preferred Donation Token: (ETH|USDC)\]/);
+  const preferredToken = preferredTokenMatch ? preferredTokenMatch[1] : 'ETH';
+
   const isVerified = charity.status === 1 && charity.isActive;
   const totalRaised = formatEther(charity.totalDonationsReceived);
   const fundingGoal = formatEther(charity.fundingGoal);
@@ -188,8 +192,8 @@ export default function CauseDetailPage() {
               <div className="mb-4">
                 <div className="flex justify-between items-baseline mb-2">
                   <div>
-                    <span className="text-3xl font-bold text-gray-900">{Number(totalRaised).toFixed(4)} ETH</span>
-                    <span className="text-gray-600 ml-2">raised of {Number(fundingGoal).toFixed(2)} ETH goal</span>
+                    <span className="text-3xl font-bold text-gray-900">{Number(totalRaised).toFixed(4)} {preferredToken}</span>
+                    <span className="text-gray-600 ml-2">raised of {Number(fundingGoal).toFixed(2)} {preferredToken} goal</span>
                   </div>
                   <span className="text-lg font-semibold text-purple-600">{percentRaised.toFixed(1)}%</span>
                 </div>
@@ -211,7 +215,7 @@ export default function CauseDetailPage() {
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-gray-900">
-                    {remainingAmount > 0 ? remainingAmount.toFixed(2) : '0'} ETH
+                    {remainingAmount > 0 ? remainingAmount.toFixed(2) : '0'} {preferredToken}
                   </div>
                   <div className="text-sm text-gray-600">Remaining</div>
                 </div>

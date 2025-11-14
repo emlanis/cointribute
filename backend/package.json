@@ -1,0 +1,30 @@
+{
+  "name": "cointribute-backend",
+  "version": "1.0.0",
+  "description": "AI-powered charity verification backend for Cointribute",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "verify": "tsx src/scripts/manualVerify.ts"
+  },
+  "keywords": ["blockchain", "charity", "ai", "verification"],
+  "author": "emlanis",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "ethers": "^6.9.0",
+    "dotenv": "^16.3.1",
+    "openai": "^4.20.1",
+    "cors": "^2.8.5",
+    "axios": "^1.6.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.4",
+    "@types/cors": "^2.8.17",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}

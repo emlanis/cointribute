@@ -5,10 +5,19 @@ import { WagmiProvider } from 'wagmi';
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { config } from '@/lib/web3/config';
 import '@rainbow-me/rainbowkit/styles.css';
-
-const queryClient = new QueryClient();
+import { useState } from 'react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  // Create QueryClient inside component to ensure it's only created once per mount
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000, // 1 minute
+        refetchOnWindowFocus: false,
+      },
+    },
+  }));
+
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>

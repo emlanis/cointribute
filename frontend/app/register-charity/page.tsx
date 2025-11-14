@@ -15,10 +15,14 @@ export default function RegisterCharityPage() {
     ipfsHash: '',
     fundingGoal: '',
     deadline: '',
+    preferredToken: 'ETH', // ETH or USDC
   });
 
-  const { writeContract, data: hash, isPending, error } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+  const { writeContract, data: hash, isPending, error, reset } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+    confirmations: 1,
+  });
 
   useEffect(() => {
     if (isSuccess) {
@@ -29,12 +33,13 @@ export default function RegisterCharityPage() {
         ipfsHash: '',
         fundingGoal: '',
         deadline: '',
+        preferredToken: 'ETH',
       });
       alert('🎉 Registration submitted! Your cause will be reviewed by our AI verification system.');
     }
   }, [isSuccess]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!isConnected) {
@@ -48,7 +53,7 @@ export default function RegisterCharityPage() {
     }
 
     try {
-      // Convert funding goal from ETH to wei
+      // Convert funding goal from ETH/USDC to wei
       const fundingGoalWei = parseEther(formData.fundingGoal);
 
       // Convert deadline to timestamp (0 if not set)
@@ -56,20 +61,35 @@ export default function RegisterCharityPage() {
         ? BigInt(Math.floor(new Date(formData.deadline).getTime() / 1000))
         : BigInt(0);
 
+      // Store preferred token in description for now (until contract upgrade)
+      const descriptionWithToken = `${formData.description}\n\n[Preferred Donation Token: ${formData.preferredToken}]`;
+
+      console.log('Submitting charity registration:', {
+        name: formData.name,
+        walletAddress: formData.walletAddress,
+        fundingGoal: formData.fundingGoal,
+        preferredToken: formData.preferredToken,
+      });
+
+      // Use placeholder IPFS hash if none provided (contract requires it)
+      const ipfsHash = formData.ipfsHash || 'QmPlaceholder123456789';
+
       writeContract({
-        ...charityRegistry,
+        address: charityRegistry.address,
+        abi: charityRegistry.abi,
         functionName: 'registerCharity',
         args: [
           formData.name,
-          formData.description,
-          formData.ipfsHash || '',
+          descriptionWithToken,
+          ipfsHash,
           formData.walletAddress as `0x${string}`,
           fundingGoalWei,
           deadlineTimestamp,
         ],
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Registration error:', err);
+      alert(`Error: ${err?.message || 'Unknown error occurred'}`);
     }
   };
 
@@ -174,6 +194,48 @@ export default function RegisterCharityPage() {
                 </p>
               </div>
 
+              {/* Preferred Donation Token */}
+              <div>
+                <label htmlFor="preferredToken" className="block text-sm font-medium text-gray-900 mb-2">
+                  Preferred Donation Token <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, preferredToken: 'ETH' })}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      formData.preferredToken === 'ETH'
+                        ? 'border-blue-600 bg-blue-50'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl mb-2">💎</div>
+                      <div className="font-semibold text-gray-900">ETH</div>
+                      <div className="text-xs text-gray-600 mt-1">Native Token</div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, preferredToken: 'USDC' })}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      formData.preferredToken === 'USDC'
+                        ? 'border-blue-600 bg-blue-50'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="text-2xl mb-2">💵</div>
+                      <div className="font-semibold text-gray-900">USDC</div>
+                      <div className="text-xs text-gray-600 mt-1">Stablecoin</div>
+                    </div>
+                  </button>
+                </div>
+                <p className="mt-2 text-xs text-gray-600">
+                  Select your preferred donation currency. Donors can contribute using {formData.preferredToken}.
+                </p>
+              </div>
+
               {/* Image/Document Upload */}
               <div>
                 <label htmlFor="ipfsHash" className="block text-sm font-medium text-gray-900 mb-2">
@@ -204,22 +266,27 @@ export default function RegisterCharityPage() {
               {/* Funding Goal */}
               <div>
                 <label htmlFor="fundingGoal" className="block text-sm font-medium text-gray-900 mb-2">
-                  Funding Goal (ETH) <span className="text-red-500">*</span>
+                  Funding Goal ({formData.preferredToken}) <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="number"
-                  id="fundingGoal"
-                  name="fundingGoal"
-                  value={formData.fundingGoal}
-                  onChange={handleInputChange}
-                  placeholder="10"
-                  step="0.01"
-                  min="0.01"
-                  required
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border text-gray-900 placeholder:text-gray-400"
-                />
+                <div className="relative">
+                  <input
+                    type="number"
+                    id="fundingGoal"
+                    name="fundingGoal"
+                    value={formData.fundingGoal}
+                    onChange={handleInputChange}
+                    placeholder="10"
+                    step="0.01"
+                    min="0.01"
+                    required
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 pr-16 border text-gray-900 placeholder:text-gray-400"
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <span className="text-gray-500 text-sm font-medium">{formData.preferredToken}</span>
+                  </div>
+                </div>
                 <p className="mt-1 text-xs text-gray-600">
-                  Target amount you want to raise for your cause
+                  Target amount you want to raise for your cause in {formData.preferredToken}
                 </p>
               </div>
 

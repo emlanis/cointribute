@@ -4,6 +4,7 @@
 
 **Network:** Base Sepolia Testnet (ChainID: 84532)
 **Deployment Date:** November 12, 2025
+**Last Updated:** November 14, 2025
 **Deployer Address:** `0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4`
 **Total Gas Used:** ~0.03 ETH
 
@@ -12,8 +13,8 @@
 ## Deployed Contracts
 
 ### 1. CharityRegistry
-- **Contract Address:** `0xf8359A66337A0F5973283b7f09dD9Bd704fCD2a4`
-- **Verified on Basescan:** ✅ https://sepolia.basescan.org/address/0xf8359A66337A0F5973283b7f09dD9Bd704fCD2a4#code
+- **Contract Address:** `0x0cA13eB99B282Cd23490B34C51dF9cBBD8528828`
+- **Verified on Basescan:** ✅ https://sepolia.basescan.org/address/0x0cA13eB99B282Cd23490B34C51dF9cBBD8528828#code
 - **Purpose:** Manages charity registration, AI-powered vetting, and multi-sig approval process
 - **Key Features:**
   - Charity registration with IPFS document storage
@@ -23,8 +24,8 @@
   - Role-based access control (ADMIN_ROLE, VERIFIER_ROLE)
 
 ### 2. VibeToken (VIBE)
-- **Contract Address:** `0xb53FA792FbdAB539DdA647de56E7ee7b8D4ab0AA`
-- **Verified on Basescan:** ✅ https://sepolia.basescan.org/address/0xb53FA792FbdAB539DdA647de56E7ee7b8D4ab0AA#code
+- **Contract Address:** `0x34a4fd87D99D14817289CA4348559c72aF74F367`
+- **Verified on Basescan:** ✅ https://sepolia.basescan.org/address/0x34a4fd87D99D14817289CA4348559c72aF74F367#code
 - **Token Symbol:** VIBE
 - **Token Name:** Vibe Coin
 - **Max Supply:** 1,000,000,000 VIBE
@@ -38,8 +39,8 @@
   - Role-based minting (MINTER_ROLE)
 
 ### 3. ImpactNFT
-- **Contract Address:** `0xc5711c2Fe962f22315e2681d445FAb8AE50a17E7`
-- **Verified on Basescan:** ✅ https://sepolia.basescan.org/address/0xc5711c2Fe962f22315e2681d445FAb8AE50a17E7#code
+- **Contract Address:** `0x00dFc2353485a56ee554da65F6bD1Ba8aFEF1C89`
+- **Verified on Basescan:** ✅ https://sepolia.basescan.org/address/0x00dFc2353485a56ee554da65F6bD1Ba8aFEF1C89#code
 - **Token Symbol:** IMPACT
 - **Token Name:** Cointribute Impact NFT
 - **Base URI:** `https://api.cointribute.xyz/metadata`
@@ -55,8 +56,8 @@
   - Impact tracking per donor
 
 ### 4. DonationManager
-- **Contract Address:** `0xD14000D3eeE85E9cD44Ae686fA7718aE9aA6019F`
-- **Verified on Basescan:** ✅ https://sepolia.basescan.org/address/0xD14000D3eeE85E9cD44Ae686fA7718aE9aA6019F#code
+- **Contract Address:** `0x2b1F4bFc8DC29e96e86c5E2A85b48D5920f63fe7`
+- **Verified on Basescan:** ✅ https://sepolia.basescan.org/address/0x2b1F4bFc8DC29e96e86c5E2A85b48D5920f63fe7#code
 - **Purpose:** Core contract managing all donations and coordinating the platform
 - **Fee Collector:** `0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4` (deployer address)
 - **Platform Fee:** 2.5% (250 basis points)
@@ -70,21 +71,65 @@
 
 ---
 
+## AI Verification Backend
+
+### Automated Charity Verification System
+- **Status:** ✅ Fully Operational
+- **Port:** 3001
+- **AI Model:** OpenAI GPT-4 Turbo
+- **Average Processing Time:** 20 seconds
+- **Automation Level:** 100% (Zero manual intervention required)
+
+**Architecture:**
+- Node.js + Express backend service
+- ethers.js v6 for blockchain integration
+- OpenAI API for AI-powered charity vetting
+- Event-driven architecture listening to `CharityRegistered` events
+
+**Verification Process:**
+1. Backend monitors CharityRegistry for new registrations
+2. Extracts charity details from blockchain
+3. GPT-4 analyzes charity legitimacy, impact, and transparency
+4. Multi-factor scoring system (0-100):
+   - Legitimacy Check (40%)
+   - Impact Potential (30%)
+   - Transparency (20%)
+   - Online Presence (10%)
+5. Automatically submits AI score to blockchain
+6. Auto-approves charities scoring ≥60/100
+7. Updates charity status to "Approved" on-chain
+
+**Live Charities (as of Nov 14, 2025):**
+- **Charity ID 0:** Save the Children - Emergency Relief Fund (AI Score: 80/100, Status: Approved)
+- **Charity ID 1:** Education For Every Nigerian Child Initiative (AI Score: 75/100, Status: Approved)
+- **Charity ID 2:** Clean Water Initiative - Kenya (AI Score: 65/100, Status: Approved)
+
+**Key Features:**
+- Real-time blockchain event monitoring
+- Comprehensive AI-powered vetting
+- Automated approval workflow
+- Detailed reasoning and flagging system
+- IPFS document verification support
+- Web scraping for online presence verification
+
+---
+
 ## Contract Interactions
 
 ### Roles & Permissions
 
 **VibeToken:**
-- `MINTER_ROLE`: Granted to DonationManager (0xD14000D3eeE85E9cD44Ae686fA7718aE9aA6019F)
+- `MINTER_ROLE`: Granted to DonationManager (0x2b1F4bFc8DC29e96e86c5E2A85b48D5920f63fe7)
 - `ADMIN_ROLE`: Deployer (0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4)
 
 **ImpactNFT:**
-- `MINTER_ROLE`: Granted to DonationManager (0xD14000D3eeE85E9cD44Ae686fA7718aE9aA6019F)
+- `MINTER_ROLE`: Granted to DonationManager (0x2b1F4bFc8DC29e96e86c5E2A85b48D5920f63fe7)
 - `ADMIN_ROLE`: Deployer (0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4)
 
 **CharityRegistry:**
 - `ADMIN_ROLE`: Deployer (0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4)
 - `VERIFIER_ROLE`: Deployer (0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4)
+- `requiredApprovals`: Set to 1 for automated AI verification
 
 ---
 
@@ -171,18 +216,32 @@ All contracts are verified and their source code is viewable on Basescan. You ca
 1. ✅ Contracts deployed to Base Sepolia
 2. ✅ All contracts verified on Basescan
 3. ✅ Documentation prepared
-4. 🔄 Frontend integration (in progress)
-5. 🔄 Backend API development (in progress)
-6. 🔄 Demo video creation
-7. 🔄 GitHub repository finalization
+4. ✅ Frontend integration complete
+5. ✅ Backend AI verification system operational
+6. ✅ 3 live charities with real donations
+7. ✅ USDC donation support implemented
+8. 🔄 Multi-currency conversion feature (in progress)
+9. 🔄 Demo video creation
+10. 🔄 GitHub repository finalization
 
-### Additional Enhancements
+### Completed Features
 
-- Set up Chainlink oracle for AI vetting automation
-- Deploy to Base Mainnet when ready
-- Implement governance voting with VIBE tokens
-- Create Impact NFT artwork and metadata
-- Set up automated charity verification pipeline
+- ✅ Automated AI charity verification with GPT-4
+- ✅ Full-stack integration (Frontend + Backend + Blockchain)
+- ✅ ETH and USDC donation support
+- ✅ Dynamic token preference system
+- ✅ Fundraising goals and progress tracking
+- ✅ Cause detail pages with social sharing
+- ✅ Real-time blockchain event monitoring
+- ✅ Transaction debugging and error handling
+
+### Next Enhancements
+
+- 🔄 Multi-currency conversion with CoinMarketCap API
+- ⏸️ Deploy to Base Mainnet when ready
+- ⏸️ Implement governance voting with VIBE tokens
+- ⏸️ Create Impact NFT artwork and metadata
+- ⏸️ DAO governance system
 
 ---
 

@@ -106,6 +106,10 @@ function CharityCard({ charityId }: { charityId: number }) {
 
   if (!charity) return null;
 
+  // Extract preferred token from description
+  const preferredTokenMatch = charity.description.match(/\[Preferred Donation Token: (ETH|USDC)\]/);
+  const preferredToken = preferredTokenMatch ? preferredTokenMatch[1] : 'ETH';
+
   const status = ['Pending', 'Approved', 'Rejected', 'Suspended'][charity.status];
   const isVerified = charity.status === 1 && charity.isActive;
   const totalDonations = formatEther(charity.totalDonationsReceived);
@@ -129,8 +133,8 @@ function CharityCard({ charityId }: { charityId: number }) {
       {isVerified && (
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-1">
-            <span className="font-semibold text-gray-900">{Number(totalDonations).toFixed(4)} ETH</span>
-            <span className="text-gray-600">of {Number(fundingGoal).toFixed(2)} ETH</span>
+            <span className="font-semibold text-gray-900">{Number(totalDonations).toFixed(4)} {preferredToken}</span>
+            <span className="text-gray-600">of {Number(fundingGoal).toFixed(2)} {preferredToken}</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
@@ -157,7 +161,7 @@ function CharityCard({ charityId }: { charityId: number }) {
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-gray-500">Total Cointributions:</span>
-          <span className="font-semibold text-gray-900">{totalDonations} ETH</span>
+          <span className="font-semibold text-gray-900">{totalDonations} {preferredToken}</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-gray-500">Cointributors:</span>
