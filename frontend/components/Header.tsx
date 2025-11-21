@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { Logo } from './Logo';
 
 export function Header() {
   return (
@@ -10,8 +11,8 @@ export function Header() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600" />
+            <Link href="/" className="flex items-center space-x-3">
+              <Logo variant="icon" size="md" />
               <span className="text-xl font-bold text-gray-900">Cointribute</span>
             </Link>
           </div>

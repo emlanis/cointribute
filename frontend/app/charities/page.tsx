@@ -4,6 +4,7 @@ import { MainLayout } from '@/components/MainLayout';
 import { charityRegistry } from '@/lib/contracts';
 import { useReadContract } from 'wagmi';
 import { formatEther } from 'viem';
+import { useUSDCEquivalent } from '@/hooks/usePriceConversion';
 
 export default function CharitiesPage() {
   // Read total charities count
@@ -92,6 +93,13 @@ function CharityCard({ charityId }: { charityId: number }) {
     args: [BigInt(charityId)],
   });
 
+  // Get ETH and USDC amounts from contract (use defaults if not loaded)
+  const ethDonations = charity?.totalETHDonations || BigInt(0);
+  const usdcDonations = charity?.totalUSDCDonations || BigInt(0);
+
+  // Convert to USDC equivalent - MUST be called before early returns
+  const { totalUSDC, loading: priceLoading, ethPrice } = useUSDCEquivalent(ethDonations, usdcDonations);
+
   if (isLoading) {
     return (
       <div className="animate-pulse">
@@ -112,9 +120,11 @@ function CharityCard({ charityId }: { charityId: number }) {
 
   const status = ['Pending', 'Approved', 'Rejected', 'Suspended'][charity.status];
   const isVerified = charity.status === 1 && charity.isActive;
-  const totalDonations = formatEther(charity.totalDonationsReceived);
-  const fundingGoal = formatEther(charity.fundingGoal);
-  const percentRaised = (Number(totalDonations) / Number(fundingGoal)) * 100;
+
+  // Funding goal is stored in wei but represents USDC target (not ETH)
+  const fundingGoalWei = charity.fundingGoal;
+  const fundingGoalUSDC = Number(fundingGoalWei) / 1e18; // Stable USDC target
+  const percentRaised = (totalUSDC / fundingGoalUSDC) * 100;
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-6 hover:shadow-lg transition-shadow">
@@ -133,8 +143,10 @@ function CharityCard({ charityId }: { charityId: number }) {
       {isVerified && (
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-1">
-            <span className="font-semibold text-gray-900">{Number(totalDonations).toFixed(4)} {preferredToken}</span>
-            <span className="text-gray-600">of {Number(fundingGoal).toFixed(2)} {preferredToken}</span>
+            <span className="font-semibold text-gray-900">
+              {priceLoading ? '...' : `$${totalUSDC.toFixed(2)}`}
+            </span>
+            <span className="text-gray-600">of ${fundingGoalUSDC.toFixed(2)}</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
@@ -161,7 +173,9 @@ function CharityCard({ charityId }: { charityId: number }) {
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-gray-500">Total Cointributions:</span>
-          <span className="font-semibold text-gray-900">{totalDonations} {preferredToken}</span>
+          <span className="font-semibold text-gray-900">
+            {priceLoading ? '...' : `$${totalUSDC.toFixed(2)}`}
+          </span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-gray-500">Cointributors:</span>

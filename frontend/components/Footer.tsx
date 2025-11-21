@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Logo } from './Logo';
 
 export function Footer() {
   return (
@@ -9,8 +10,8 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-1">
-            <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600" />
+            <div className="flex items-center space-x-3">
+              <Logo variant="icon" size="md" />
               <span className="text-xl font-bold text-gray-900">Cointribute</span>
             </div>
             <p className="mt-4 text-sm text-gray-600">

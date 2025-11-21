@@ -8,6 +8,10 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Cointribute - Transparent Charity Donations on Base",
   description: "Donate to verified charities, earn VIBE tokens, and receive Impact NFTs. Powered by blockchain technology for transparency.",
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
 };
 
 export default function RootLayout({
