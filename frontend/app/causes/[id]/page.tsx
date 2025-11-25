@@ -17,6 +17,25 @@ export default function CauseDetailPage() {
   const [donationAmount, setDonationAmount] = useState('');
   const [currency, setCurrency] = useState<Currency>('ETH');
 
+  // Fetch charity images
+  const [images, setImages] = useState<string[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  useEffect(() => {
+    async function fetchImages() {
+      try {
+        const response = await fetch(`http://localhost:3001/api/charity-images/${causeId}`);
+        const data = await response.json();
+        if (data.success && data.images.length > 0) {
+          setImages(data.images);
+        }
+      } catch (error) {
+        console.error('Failed to fetch images:', error);
+      }
+    }
+    fetchImages();
+  }, [causeId]);
+
   const { data: charity } = useReadContract({
     ...charityRegistry,
     functionName: 'getCharity',
@@ -198,6 +217,64 @@ export default function CauseDetailPage() {
                 )}
               </div>
             </div>
+
+            {/* Image Gallery */}
+            {images.length > 0 && (
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                {/* Main Image */}
+                <div className="relative h-96 bg-gradient-to-br from-blue-100 to-purple-100">
+                  <img
+                    src={images[currentImageIndex]}
+                    alt={`${charity.name} - Image ${currentImageIndex + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+
+                  {/* Navigation Arrows */}
+                  {images.length > 1 && (
+                    <>
+                      <button
+                        onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+                      >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+                      >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+
+                      {/* Image Counter */}
+                      <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
+                        {currentImageIndex + 1} / {images.length}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Thumbnail Strip */}
+                {images.length > 1 && (
+                  <div className="p-4 bg-gray-50 flex gap-2 overflow-x-auto">
+                    {images.map((img, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentImageIndex(idx)}
+                        className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                          idx === currentImageIndex ? 'border-blue-600 ring-2 ring-blue-200' : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      >
+                        <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Progress Bar */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">

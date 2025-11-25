@@ -3,8 +3,10 @@ import './env';
 
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import { BlockchainListener } from './services/blockchainListener';
 import { coinMarketCapService } from './services/coinMarketCapService';
+import { upload, processImage, getImageUrl } from './services/imageUpload';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -12,6 +14,9 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Serve uploaded images statically
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -74,6 +79,82 @@ app.post('/api/convert-to-usd', async (req, res) => {
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: 'Failed to convert to USD' });
+  }
+});
+
+// Get charity images by ID
+app.get('/api/charity-images/:charityId', async (req, res) => {
+  try {
+    const { charityId } = req.params;
+    const { charityImageRegistry } = await import('./services/charityImageRegistry');
+
+    const images = charityImageRegistry.getImagesByCharityId(parseInt(charityId));
+
+    res.json({
+      success: true,
+      charityId: parseInt(charityId),
+      images: images || [],
+      count: images?.length || 0
+    });
+  } catch (error) {
+    console.error('Error fetching charity images:', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Failed to fetch images'
+    });
+  }
+});
+
+// Image upload endpoint
+app.post('/api/upload-images', upload.array('images', 5), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No images uploaded' });
+    }
+
+    const { walletAddress } = req.body;
+    if (!walletAddress) {
+      return res.status(400).json({ error: 'Wallet address is required' });
+    }
+
+    const files = req.files as Express.Multer.File[];
+    const imageUrls: string[] = [];
+    const processedFiles: string[] = [];
+
+    // Process each uploaded image
+    for (const file of files) {
+      const result = await processImage(file.path);
+
+      if (result.success && result.optimizedPath) {
+        const imageUrl = getImageUrl(path.basename(result.optimizedPath), req);
+        imageUrls.push(imageUrl);
+        processedFiles.push(result.optimizedPath);
+      } else {
+        console.error(`Failed to process image: ${file.originalname}`);
+      }
+    }
+
+    if (imageUrls.length === 0) {
+      return res.status(500).json({ error: 'Failed to process any images' });
+    }
+
+    // Store images with wallet address (will be moved to charityId after registration)
+    const { charityImageRegistry } = await import('./services/charityImageRegistry');
+    charityImageRegistry.storeImagesByWallet(walletAddress, imageUrls);
+
+    console.log(`✅ Successfully uploaded and processed ${imageUrls.length} images for wallet ${walletAddress}`);
+
+    res.json({
+      success: true,
+      images: imageUrls,
+      count: imageUrls.length,
+      walletAddress
+    });
+
+  } catch (error) {
+    console.error('Image upload error:', error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'Failed to upload images'
+    });
   }
 });
 

@@ -18,6 +18,11 @@ export default function RegisterCharityPage() {
     preferredToken: 'ETH', // ETH or USDC
   });
 
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
+
   const { writeContract, data: hash, isPending, error, reset } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
@@ -48,7 +53,7 @@ export default function RegisterCharityPage() {
     }
   }, [error, reset]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!isConnected) {
@@ -62,6 +67,13 @@ export default function RegisterCharityPage() {
     }
 
     try {
+      // Step 1: Upload images first (if any)
+      if (selectedImages.length > 0) {
+        console.log('📸 Uploading images first...');
+        await uploadImages();
+        console.log('✅ Images uploaded! Proceeding with registration...');
+      }
+
       // Convert funding goal from ETH/USDC to wei
       const fundingGoalWei = parseEther(formData.fundingGoal);
 
@@ -82,6 +94,7 @@ export default function RegisterCharityPage() {
         walletAddress: formData.walletAddress,
         fundingGoal: formData.fundingGoal,
         preferredToken: formData.preferredToken,
+        imageCount: selectedImages.length,
       });
 
       // Use placeholder IPFS hash if none provided (contract requires it)
@@ -98,7 +111,7 @@ export default function RegisterCharityPage() {
           formData.walletAddress as `0x${string}`,
           fundingGoalWei,
           deadlineTimestamp,
-          [], // imageHashes - empty array for now, will add upload feature next
+          [], // imageHashes - stored in backend registry
         ],
       });
     } catch (err: any) {
@@ -112,6 +125,92 @@ export default function RegisterCharityPage() {
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  // Handle image file selection
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+
+    // Validate: max 5 images
+    if (files.length + selectedImages.length > 5) {
+      alert('Maximum 5 images allowed');
+      return;
+    }
+
+    // Validate: each file max 5MB
+    const invalidFiles = files.filter(file => file.size > 5 * 1024 * 1024);
+    if (invalidFiles.length > 0) {
+      alert('Each image must be less than 5MB');
+      return;
+    }
+
+    // Validate: only images
+    const nonImageFiles = files.filter(file => !file.type.startsWith('image/'));
+    if (nonImageFiles.length > 0) {
+      alert('Only image files are allowed');
+      return;
+    }
+
+    // Add to selected images
+    setSelectedImages(prev => [...prev, ...files]);
+
+    // Create previews
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreviews(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Remove selected image
+  const handleRemoveImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Upload images to backend
+  const uploadImages = async (): Promise<string[]> => {
+    if (selectedImages.length === 0) {
+      return [];
+    }
+
+    if (!address) {
+      throw new Error('Wallet not connected');
+    }
+
+    setIsUploadingImages(true);
+
+    try {
+      const formData = new FormData();
+      selectedImages.forEach(file => {
+        formData.append('images', file);
+      });
+      formData.append('walletAddress', address);
+
+      const response = await fetch('http://localhost:3001/api/upload-images', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to upload images');
+      }
+
+      const result = await response.json();
+      console.log('✅ Images uploaded successfully:', result);
+
+      setUploadedImageUrls(result.images);
+      return result.images;
+    } catch (error: any) {
+      console.error('Image upload error:', error);
+      alert(`Failed to upload images: ${error.message}`);
+      throw error;
+    } finally {
+      setIsUploadingImages(false);
+    }
   };
 
   return (
@@ -185,6 +284,85 @@ export default function RegisterCharityPage() {
                 />
                 <p className="mt-1 text-xs text-gray-600">
                   Provide a clear description to help the AI verify your cause
+                </p>
+              </div>
+
+              {/* Campaign Images */}
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Campaign Images (Optional, but Recommended)
+                </label>
+                <div className="mb-4 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border-2 border-dashed border-purple-300">
+                  <div className="flex items-start gap-3">
+                    <span className="text-3xl">📸</span>
+                    <div>
+                      <p className="text-sm font-semibold text-purple-900 mb-1">
+                        ✨ AI Image Verification - NEW!
+                      </p>
+                      <p className="text-xs text-purple-800">
+                        Upload photos of your cause to increase legitimacy. Our AI will verify that images match your stated purpose. Authentic images can boost your approval score by up to +20 points!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* File Input */}
+                <div className="flex items-center justify-center w-full">
+                  <label htmlFor="imageUpload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <svg className="w-8 h-8 mb-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <p className="mb-1 text-sm text-gray-600">
+                        <span className="font-semibold">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        PNG, JPG, WebP (MAX. 5MB each, up to 5 images)
+                      </p>
+                    </div>
+                    <input
+                      id="imageUpload"
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageSelect}
+                      disabled={selectedImages.length >= 5}
+                    />
+                  </label>
+                </div>
+
+                {/* Image Previews */}
+                {imagePreviews.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-gray-700 mb-2">
+                      Selected Images ({imagePreviews.length}/5)
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={preview}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <p className="mt-2 text-xs text-gray-600">
+                  💡 <strong>Pro Tip:</strong> Upload real photos of your charity work, beneficiaries, or facilities. AI will verify authenticity and relevance to your cause.
                 </p>
               </div>
 
@@ -355,10 +533,11 @@ export default function RegisterCharityPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isPending || isConfirming || !isConnected}
+                disabled={isPending || isConfirming || isUploadingImages || !isConnected}
                 className="w-full rounded-md bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isPending ? 'Confirm in wallet...' :
+                {isUploadingImages ? '📸 Uploading images...' :
+                 isPending ? 'Confirm in wallet...' :
                  isConfirming ? 'Processing...' :
                  'Register Cause'}
               </button>

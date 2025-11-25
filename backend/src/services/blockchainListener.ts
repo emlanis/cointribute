@@ -1,9 +1,10 @@
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESSES, CHARITY_REGISTRY_ABI } from '../config/contracts';
 import { AIVerificationService } from './aiVerification';
+import { charityImageRegistry } from './charityImageRegistry';
 
 export class BlockchainListener {
-  private provider: ethers.JsonRpcProvider;
+  private provider: ethers.JsonRpcProvider | ethers.WebSocketProvider;
   private contract: ethers.Contract;
   private wallet: ethers.Wallet;
   private aiService: AIVerificationService;
@@ -59,7 +60,19 @@ export class BlockchainListener {
         // Fetch full charity details
         const charityData = await this.getCharityDetails(Number(charityId));
 
-        // Run AI verification
+        // Check if there are images uploaded for this wallet
+        const imageUrls = charityImageRegistry.getImagesByWallet(registrant);
+        if (imageUrls && imageUrls.length > 0) {
+          console.log(`📸 Found ${imageUrls.length} uploaded images for this charity`);
+          charityData.imageUrls = imageUrls;
+
+          // Move images from wallet to charity ID
+          charityImageRegistry.moveToCharityId(registrant, Number(charityId), imageUrls);
+        } else {
+          console.log(`ℹ️  No images uploaded for this charity`);
+        }
+
+        // Run AI verification (will analyze images if present)
         const verificationResult = await this.aiService.verifyCharity(charityData);
 
         console.log(`\n🤖 AI Verification Results:`);
@@ -91,7 +104,14 @@ export class BlockchainListener {
   /**
    * Get charity details from blockchain
    */
-  private async getCharityDetails(charityId: number) {
+  private async getCharityDetails(charityId: number): Promise<{
+    charityId: number;
+    name: string;
+    description: string;
+    ipfsHash: string;
+    walletAddress: string;
+    imageUrls?: string[];
+  }> {
     try {
       const charityData = await this.contract.getCharity(charityId);
 
@@ -160,6 +180,24 @@ export class BlockchainListener {
             console.log(`\n📋 Processing unverified charity ID ${charityId}...`);
 
             const details = await this.getCharityDetails(charityId);
+
+            // Check for images by charity ID first
+            let imageUrls = charityImageRegistry.getImagesByCharityId(charityId);
+
+            // If not found by charity ID, check by wallet address
+            if (!imageUrls || imageUrls.length === 0) {
+              imageUrls = charityImageRegistry.getImagesByWallet(details.walletAddress);
+              if (imageUrls && imageUrls.length > 0) {
+                console.log(`📸 Found ${imageUrls.length} images by wallet address for charity ${charityId}`);
+                // Move images from wallet to charity ID
+                charityImageRegistry.moveToCharityId(details.walletAddress, charityId, imageUrls);
+                details.imageUrls = imageUrls;
+              }
+            } else {
+              console.log(`📸 Found ${imageUrls.length} images for charity ${charityId}`);
+              details.imageUrls = imageUrls;
+            }
+
             const verificationResult = await this.aiService.verifyCharity(details);
 
             await this.submitVerification(

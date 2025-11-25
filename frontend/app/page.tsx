@@ -6,6 +6,7 @@ import { charityRegistry, donationManager, impactNFT } from '@/lib/contracts';
 import { useReadContract } from 'wagmi';
 import { formatEther } from 'viem';
 import { useUSDCEquivalent } from '@/hooks/usePriceConversion';
+import { useState, useEffect } from 'react';
 
 export default function Home() {
   // Fetch live blockchain data
@@ -329,6 +330,27 @@ function FeaturedCauseCard({ charityId }: { charityId: number }) {
     args: [BigInt(charityId)],
   });
 
+  // Fetch charity images
+  const [images, setImages] = useState<string[]>([]);
+  const [loadingImages, setLoadingImages] = useState(true);
+
+  useEffect(() => {
+    async function fetchImages() {
+      try {
+        const response = await fetch(`http://localhost:3001/api/charity-images/${charityId}`);
+        const data = await response.json();
+        if (data.success && data.images.length > 0) {
+          setImages(data.images);
+        }
+      } catch (error) {
+        console.error('Failed to fetch images:', error);
+      } finally {
+        setLoadingImages(false);
+      }
+    }
+    fetchImages();
+  }, [charityId]);
+
   // Get ETH and USDC amounts from contract (use defaults if not loaded)
   const ethDonations = charity?.totalETHDonations || BigInt(0);
   const usdcDonations = charity?.totalUSDCDonations || BigInt(0);
@@ -349,9 +371,26 @@ function FeaturedCauseCard({ charityId }: { charityId: number }) {
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="h-48 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
-        <div className="text-6xl">🤝</div>
-      </div>
+      {/* Charity Image */}
+      {images.length > 0 ? (
+        <div className="relative h-48 w-full overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100">
+          <img
+            src={images[0]}
+            alt={charity.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              // Fallback if image fails to load
+              e.currentTarget.style.display = 'none';
+              e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-6xl">🤝</div>';
+            }}
+          />
+        </div>
+      ) : (
+        <div className="h-48 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+          <div className="text-6xl">🤝</div>
+        </div>
+      )}
+
       <div className="p-6">
         <h3 className="text-xl font-bold text-gray-900 mb-2">{charity.name}</h3>
         <p className="text-sm text-gray-600 line-clamp-2 mb-4">{charity.description}</p>

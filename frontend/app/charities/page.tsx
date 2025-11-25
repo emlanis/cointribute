@@ -5,6 +5,7 @@ import { charityRegistry } from '@/lib/contracts';
 import { useReadContract } from 'wagmi';
 import { formatEther } from 'viem';
 import { useUSDCEquivalent } from '@/hooks/usePriceConversion';
+import { useState, useEffect } from 'react';
 
 export default function CharitiesPage() {
   // Read total charities count
@@ -93,6 +94,27 @@ function CharityCard({ charityId }: { charityId: number }) {
     args: [BigInt(charityId)],
   });
 
+  // Fetch charity images
+  const [images, setImages] = useState<string[]>([]);
+  const [loadingImages, setLoadingImages] = useState(true);
+
+  useEffect(() => {
+    async function fetchImages() {
+      try {
+        const response = await fetch(`http://localhost:3001/api/charity-images/${charityId}`);
+        const data = await response.json();
+        if (data.success && data.images.length > 0) {
+          setImages(data.images);
+        }
+      } catch (error) {
+        console.error('Failed to fetch images:', error);
+      } finally {
+        setLoadingImages(false);
+      }
+    }
+    fetchImages();
+  }, [charityId]);
+
   // Get ETH and USDC amounts from contract (use defaults if not loaded)
   const ethDonations = charity?.totalETHDonations || BigInt(0);
   const usdcDonations = charity?.totalUSDCDonations || BigInt(0);
@@ -127,17 +149,41 @@ function CharityCard({ charityId }: { charityId: number }) {
   const percentRaised = (totalUSDC / fundingGoalUSDC) * 100;
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6 hover:shadow-lg transition-shadow">
-      <div className="flex items-start justify-between mb-3">
-        <h3 className="text-lg font-semibold text-gray-900">{charity.name}</h3>
-        {isVerified && (
-          <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-            ✓ Verified
-          </span>
-        )}
-      </div>
+    <div className="rounded-lg border border-gray-200 bg-white overflow-hidden hover:shadow-lg transition-shadow">
+      {/* Charity Image */}
+      {images.length > 0 ? (
+        <div className="relative h-48 w-full overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100">
+          <img
+            src={images[0]}
+            alt={charity.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              // Fallback if image fails to load
+              e.currentTarget.style.display = 'none';
+              e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-6xl">🤝</div>';
+            }}
+          />
+          {isVerified && (
+            <span className="absolute top-3 right-3 inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 shadow-sm">
+              ✓ Verified
+            </span>
+          )}
+        </div>
+      ) : (
+        <div className="relative h-48 w-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+          <span className="text-6xl">🤝</span>
+          {isVerified && (
+            <span className="absolute top-3 right-3 inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 shadow-sm">
+              ✓ Verified
+            </span>
+          )}
+        </div>
+      )}
 
-      <p className="mt-2 text-sm text-gray-600 line-clamp-2 mb-4">{charity.description}</p>
+      {/* Card Content */}
+      <div className="p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-3">{charity.name}</h3>
+        <p className="mt-2 text-sm text-gray-600 line-clamp-2 mb-4">{charity.description}</p>
 
       {/* Progress Bar */}
       {isVerified && (
@@ -183,24 +229,25 @@ function CharityCard({ charityId }: { charityId: number }) {
         </div>
       </div>
 
-      {isVerified && (
-        <div className="mt-6 space-y-2">
-          <a
-            href={`/causes/${charityId}`}
-            className="block w-full rounded-md bg-gradient-to-r from-blue-600 to-purple-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity"
-          >
-            View Campaign
-          </a>
-        </div>
-      )}
-
-      {!isVerified && (
-        <div className="mt-6">
-          <div className="block w-full rounded-md bg-gray-100 px-3 py-2 text-center text-sm font-semibold text-gray-500">
-            Pending Verification
+        {isVerified && (
+          <div className="mt-6 space-y-2">
+            <a
+              href={`/causes/${charityId}`}
+              className="block w-full rounded-md bg-gradient-to-r from-blue-600 to-purple-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity"
+            >
+              View Campaign
+            </a>
           </div>
-        </div>
-      )}
+        )}
+
+        {!isVerified && (
+          <div className="mt-6">
+            <div className="block w-full rounded-md bg-gray-100 px-3 py-2 text-center text-sm font-semibold text-gray-500">
+              Pending Verification
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
