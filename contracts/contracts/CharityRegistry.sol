@@ -36,7 +36,7 @@ contract CharityRegistry is AccessControl, ReentrancyGuard {
         uint256 totalDonationsReceived; // Total in wei (backward compatible)
         uint256 donorCount;
         uint256 fundingGoal; // Target amount to raise in wei
-        uint256 deadline; // Fundraising deadline (0 = no deadline)
+        uint256 deadline; // Fundraising deadline (REQUIRED, must be > 0)
         bool isActive;
         uint256 totalETHDonations; // Track ETH donations separately
         uint256 totalUSDCDonations; // Track USDC donations separately (in USDC base units)
@@ -116,7 +116,7 @@ contract CharityRegistry is AccessControl, ReentrancyGuard {
      * @param _ipfsHash IPFS hash containing charity documents
      * @param _walletAddress Wallet to receive donations
      * @param _fundingGoal Target amount to raise (in wei)
-     * @param _deadline Fundraising deadline (timestamp, 0 for no deadline)
+     * @param _deadline Fundraising deadline (timestamp, REQUIRED)
      * @param _imageHashes Initial IPFS hashes for campaign images (optional)
      * @return charityId The ID of the newly registered charity
      */
@@ -133,9 +133,8 @@ contract CharityRegistry is AccessControl, ReentrancyGuard {
         require(bytes(_ipfsHash).length > 0, "IPFS hash required");
         require(_walletAddress != address(0), "Invalid wallet address");
         require(_fundingGoal > 0, "Funding goal must be greater than 0");
-        if (_deadline > 0) {
-            require(_deadline > block.timestamp, "Deadline must be in the future");
-        }
+        require(_deadline > 0, "Deadline is required");
+        require(_deadline > block.timestamp, "Deadline must be in the future");
 
         // Check cooldown period (3 months between registrations)
         if (lastRegistrationTime[_walletAddress] > 0) {

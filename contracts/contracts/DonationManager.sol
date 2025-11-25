@@ -51,12 +51,24 @@ contract DonationManager is AccessControl, ReentrancyGuard {
         bool nftMinted;
     }
 
+    // Fund holding per charity
+    struct CharityFunds {
+        uint256 ethBalance;
+        uint256 usdcBalance;
+        uint256 ethFees;
+        uint256 usdcFees;
+        bool fundsReleased;
+        uint256 releasedAt;
+    }
+
     mapping(uint256 => Donation) public donations;
     mapping(address => uint256[]) public donorDonations;
     mapping(uint256 => uint256[]) public charityDonations;
     mapping(address => uint256) public totalDonatedByDonor;
     mapping(address => mapping(uint256 => uint256))
         public donorCharityTotal;
+
+    mapping(uint256 => CharityFunds) public charityFunds; // Held funds per charity
 
     uint256 public donationCount;
     uint256 public totalPlatformFees;
@@ -120,6 +132,18 @@ contract DonationManager is AccessControl, ReentrancyGuard {
         address indexed token,
         uint256 amount,
         address to
+    );
+    event FundsReleased(
+        uint256 indexed charityId,
+        uint256 ethAmount,
+        uint256 usdcAmount,
+        address charityWallet,
+        string reason,
+        uint256 timestamp
+    );
+    event CharityFinalized(
+        uint256 indexed charityId,
+        uint256 timestamp
     );
 
     /**
@@ -213,26 +237,17 @@ contract DonationManager is AccessControl, ReentrancyGuard {
         uint256 fee = (_amount * platformFeeBps) / 10000;
         uint256 netDonation = _amount - fee;
 
-        // Get charity wallet
-        CharityRegistry.Charity memory charity = charityRegistry.getCharity(
-            _charityId
-        );
+        // Hold funds in contract instead of instant transfer
+        CharityFunds storage funds = charityFunds[_charityId];
 
-        // Transfer net donation to charity
         if (_token == address(0)) {
-            // ETH transfer
-            (bool success, ) = charity.walletAddress.call{value: netDonation}(
-                ""
-            );
-            require(success, "ETH transfer failed");
-
-            // Transfer fee to collector
-            (success, ) = feeCollector.call{value: fee}("");
-            require(success, "Fee transfer failed");
+            // Hold ETH in contract
+            funds.ethBalance += netDonation;
+            funds.ethFees += fee;
         } else {
-            // ERC20 transfer
-            IERC20(_token).safeTransfer(charity.walletAddress, netDonation);
-            IERC20(_token).safeTransfer(feeCollector, fee);
+            // Hold USDC in contract
+            funds.usdcBalance += netDonation;
+            funds.usdcFees += fee;
         }
 
         // Calculate VIBE rewards (based on ETH value)
@@ -297,6 +312,167 @@ contract DonationManager is AccessControl, ReentrancyGuard {
         );
 
         emit FeeCollected(fee, _token, block.timestamp);
+
+        // Check if funds should be released (goal reached or deadline passed)
+        _checkAndReleaseFunds(_charityId);
+    }
+
+    /**
+     * @notice Check if funds should be released and release them
+     * @param _charityId Charity ID
+     */
+    function _checkAndReleaseFunds(uint256 _charityId) private {
+        CharityRegistry.Charity memory charity = charityRegistry.getCharity(_charityId);
+        CharityFunds storage funds = charityFunds[_charityId];
+
+        // Don't release if already released
+        if (funds.fundsReleased) {
+            return;
+        }
+
+        // Check if goal is reached or deadline passed
+        bool goalReached = false;
+        bool deadlinePassed = false;
+
+        // Calculate total raised in wei (convert USDC to wei for comparison)
+        uint256 totalRaisedWei = charity.totalETHDonations + (charity.totalUSDCDonations * 1e12); // Convert USDC 6 decimals to 18 decimals
+
+        if (totalRaisedWei >= charity.fundingGoal) {
+            goalReached = true;
+        }
+
+        if (charity.deadline > 0 && block.timestamp >= charity.deadline) {
+            deadlinePassed = true;
+        }
+
+        // Release funds if either condition is met
+        if (goalReached || deadlinePassed) {
+            _releaseFunds(_charityId, goalReached, deadlinePassed);
+        }
+    }
+
+    /**
+     * @notice Public function to manually trigger fund release
+     * @param _charityId Charity ID
+     * @dev Can be called by anyone to release funds if conditions are met
+     */
+    function releaseFunds(uint256 _charityId) external nonReentrant {
+        CharityFunds storage funds = charityFunds[_charityId];
+        require(!funds.fundsReleased, "Funds already released");
+
+        CharityRegistry.Charity memory charity = charityRegistry.getCharity(_charityId);
+
+        // Calculate total raised
+        uint256 totalRaisedWei = charity.totalETHDonations + (charity.totalUSDCDonations * 1e12);
+
+        bool goalReached = totalRaisedWei >= charity.fundingGoal;
+        bool deadlinePassed = charity.deadline > 0 && block.timestamp >= charity.deadline;
+
+        require(
+            goalReached || deadlinePassed,
+            "Cannot release: goal not reached and deadline not passed"
+        );
+
+        _releaseFunds(_charityId, goalReached, deadlinePassed);
+    }
+
+    /**
+     * @notice Internal function to release funds to charity
+     * @param _charityId Charity ID
+     * @param _goalReached Whether funding goal was reached
+     * @param _deadlinePassed Whether deadline has passed
+     */
+    function _releaseFunds(
+        uint256 _charityId,
+        bool _goalReached,
+        bool _deadlinePassed
+    ) private {
+        CharityRegistry.Charity memory charity = charityRegistry.getCharity(_charityId);
+        CharityFunds storage funds = charityFunds[_charityId];
+
+        require(!funds.fundsReleased, "Funds already released");
+
+        // Mark as released
+        funds.fundsReleased = true;
+        funds.releasedAt = block.timestamp;
+
+        // Transfer ETH if any
+        if (funds.ethBalance > 0) {
+            (bool success, ) = charity.walletAddress.call{value: funds.ethBalance}("");
+            require(success, "ETH transfer to charity failed");
+        }
+
+        // Transfer ETH fees to fee collector
+        if (funds.ethFees > 0) {
+            (bool success, ) = feeCollector.call{value: funds.ethFees}("");
+            require(success, "ETH fee transfer failed");
+        }
+
+        // Transfer USDC if any
+        if (funds.usdcBalance > 0) {
+            IERC20(USDC_TOKEN).safeTransfer(charity.walletAddress, funds.usdcBalance);
+        }
+
+        // Transfer USDC fees to fee collector
+        if (funds.usdcFees > 0) {
+            IERC20(USDC_TOKEN).safeTransfer(feeCollector, funds.usdcFees);
+        }
+
+        // Determine release reason
+        string memory reason;
+        if (_goalReached && !_deadlinePassed) {
+            reason = "Goal reached before deadline";
+        } else if (!_goalReached && _deadlinePassed) {
+            reason = "Deadline passed";
+        } else {
+            reason = "Goal reached and deadline passed";
+        }
+
+        emit FundsReleased(
+            _charityId,
+            funds.ethBalance,
+            funds.usdcBalance,
+            charity.walletAddress,
+            reason,
+            block.timestamp
+        );
+    }
+
+    /**
+     * @notice Finalize and close a charity campaign
+     * @param _charityId Charity ID
+     * @dev Can only be called after funds are released and deadline has passed
+     */
+    function finalizeCharity(uint256 _charityId)
+        external
+        onlyRole(ADMIN_ROLE)
+    {
+        CharityRegistry.Charity memory charity = charityRegistry.getCharity(_charityId);
+        CharityFunds storage funds = charityFunds[_charityId];
+
+        require(funds.fundsReleased, "Funds not yet released");
+        require(
+            charity.deadline > 0 && block.timestamp >= charity.deadline,
+            "Deadline not yet passed"
+        );
+
+        // The charity would be marked as inactive in CharityRegistry
+        // This function serves as a record that the campaign is officially closed
+
+        emit CharityFinalized(_charityId, block.timestamp);
+    }
+
+    /**
+     * @notice Get held funds for a charity
+     * @param _charityId Charity ID
+     * @return CharityFunds struct
+     */
+    function getCharityFunds(uint256 _charityId)
+        external
+        view
+        returns (CharityFunds memory)
+    {
+        return charityFunds[_charityId];
     }
 
     /**
