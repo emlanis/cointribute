@@ -1,286 +1,267 @@
-# Cointribute Smart Contracts Deployment
+# Cointribute Deployment Guide
 
-## Deployment Summary
+## Current Deployment Status
 
-**Network:** Base Sepolia Testnet (ChainID: 84532)
-**Deployment Date:** November 12, 2025
-**Last Updated:** November 14, 2025
-**Deployer Address:** `0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4`
-**Total Gas Used:** ~0.03 ETH
+**Network**: Base Sepolia Testnet  
+**Date**: November 25, 2025  
+**Status**: ✅ **FULLY OPERATIONAL**
 
----
+## Contract Addresses
 
-## Deployed Contracts
+### Production Contracts (Latest)
 
-### 1. CharityRegistry
-- **Contract Address:** `0x0cA13eB99B282Cd23490B34C51dF9cBBD8528828`
-- **Verified on Basescan:** ✅ https://sepolia.basescan.org/address/0x0cA13eB99B282Cd23490B34C51dF9cBBD8528828#code
-- **Purpose:** Manages charity registration, AI-powered vetting, and multi-sig approval process
-- **Key Features:**
-  - Charity registration with IPFS document storage
-  - AI vetting scores (0-100)
-  - Multi-signature verification process
-  - Charity status management (Pending, Approved, Rejected, Suspended)
-  - Role-based access control (ADMIN_ROLE, VERIFIER_ROLE)
+```
+Network: Base Sepolia (Chain ID: 84532)
+RPC: https://sepolia.base.org
 
-### 2. VibeToken (VIBE)
-- **Contract Address:** `0x34a4fd87D99D14817289CA4348559c72aF74F367`
-- **Verified on Basescan:** ✅ https://sepolia.basescan.org/address/0x34a4fd87D99D14817289CA4348559c72aF74F367#code
-- **Token Symbol:** VIBE
-- **Token Name:** Vibe Coin
-- **Max Supply:** 1,000,000,000 VIBE
-- **Initial Supply:** 100,000,000 VIBE (10% of max supply minted to treasury)
-- **Purpose:** ERC20 governance and reward token for the Cointribute platform
-- **Key Features:**
-  - Donation rewards (10 VIBE per 1 ETH donated)
-  - Staking with tiered APY rates (5%, 10%, 15%)
-  - Lock periods: 30, 90, 180 days
-  - Burnable for platform fees
-  - Role-based minting (MINTER_ROLE)
+CharityRegistry:  0xc8928b40C1A494E1f039665E6f0C2ce64681254a
+VibeToken:        0xc2780b90e32aAf93f7829929ac3A234Bc49617B6
+ImpactNFT:        0xc241E5103a6B1E404024ADbA170C4Ca81003B459
+DonationManager:  0x2d70ECd4ee1010Ac4CE53b5a284eC0e3c96Ed748
+USDC (Testnet):   0x036CbD53842c5426634e7929541eC2318f3dCF7e
 
-### 3. ImpactNFT
-- **Contract Address:** `0x00dFc2353485a56ee554da65F6bD1Ba8aFEF1C89`
-- **Verified on Basescan:** ✅ https://sepolia.basescan.org/address/0x00dFc2353485a56ee554da65F6bD1Ba8aFEF1C89#code
-- **Token Symbol:** IMPACT
-- **Token Name:** Cointribute Impact NFT
-- **Base URI:** `https://api.cointribute.xyz/metadata`
-- **Purpose:** ERC721 NFTs representing donor impact with dynamic tiers
-- **Key Features:**
-  - Dynamic NFT tiers based on donation amounts:
-    - Bronze: 1-5 ETH
-    - Silver: 5-10 ETH
-    - Gold: 10-50 ETH
-    - Platinum: 50+ ETH
-  - Auto-upgradable tiers as donations increase
-  - IPFS metadata support
-  - Impact tracking per donor
+Deployer Address: 0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4
+```
 
-### 4. DonationManager
-- **Contract Address:** `0x2b1F4bFc8DC29e96e86c5E2A85b48D5920f63fe7`
-- **Verified on Basescan:** ✅ https://sepolia.basescan.org/address/0x2b1F4bFc8DC29e96e86c5E2A85b48D5920f63fe7#code
-- **Purpose:** Core contract managing all donations and coordinating the platform
-- **Fee Collector:** `0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4` (deployer address)
-- **Platform Fee:** 2.5% (250 basis points)
-- **Key Features:**
-  - ETH and ERC20 donation support
-  - Automatic VIBE reward distribution
-  - Automatic Impact NFT minting (threshold: 1 ETH)
-  - Recurring donation subscriptions
-  - Platform fee collection
-  - Integration with all other contracts
+### Contract Features
 
----
+#### CharityRegistry v3.0
+- ✅ Fully automatic AI verification (no manual approval)
+- ✅ Multi-charity registration per wallet
+- ✅ 3-month cooldown between registrations
+- ✅ Active charity check (prevents multiple active campaigns)
+- ✅ Minimum AI score: 60 for auto-approval
+- ✅ Image upload support (IPFS hash storage)
 
-## Price Conversion Service
+#### Backend Services
+- **URL**: http://localhost:3001
+- **AI Model**: OpenAI GPT-4
+- **Features**:
+  - Real-time event listening
+  - Automatic charity verification
+  - CoinMarketCap price integration
+  - Historical charity scanning
 
-### CoinMarketCap API Integration
-- **Status:** ✅ Fully Operational
-- **API:** CoinMarketCap Pro API
-- **Purpose:** Real-time cryptocurrency price conversion to USD
-- **Cache Duration:** 60 seconds (reduces API calls)
-- **Supported Tokens:** ETH, USDC (stablecoins return 1:1)
+#### Frontend Application
+- **URL**: http://localhost:3000
+- **Framework**: Next.js 14 (App Router)
+- **Web3**: Wagmi v2 + RainbowKit
+- **Network**: Base Sepolia
 
-**Architecture:**
-- Node.js service integrated into backend
-- RESTful API endpoint: `/api/prices?symbols=ETH,USDC`
-- In-memory caching to optimize API usage
-- Fallback to $2500 ETH if API unavailable
-- Used by frontend for unified USD display
+## Deployment History
 
-**Key Features:**
-- Fetches live cryptocurrency prices
-- Converts donations to USD equivalent for display
-- Combines ETH and USDC donations into single USD total
-- Auto-refreshes frontend prices every 60 seconds
-- Handles API rate limiting gracefully
+### v3.0 - November 25, 2025 (CURRENT)
+**CharityRegistry**: `0xc8928b40C1A494E1f039665E6f0C2ce64681254a`
 
----
+**Changes**:
+- Removed multi-sig approval system
+- Made AI verification fully automatic
+- Score >= 60 auto-approves, < 60 auto-rejects
+- Optimized gas usage (~343k gas per registration)
 
-## AI Verification Backend
+### v2.0 - November 24, 2025
+**CharityRegistry**: `0x04b2176dd992CF1b3A50e3a0253fF4b2AD1E7790`
 
-### Automated Charity Verification System
-- **Status:** ✅ Fully Operational
-- **Port:** 3001
-- **AI Model:** OpenAI GPT-4 Turbo
-- **Average Processing Time:** 20 seconds
-- **Automation Level:** 100% (Zero manual intervention required)
+**Changes**:
+- Added multi-charity per wallet support
+- Implemented 3-month cooldown
+- Added active charity check
+- Added image upload capability
 
-**Architecture:**
-- Node.js + Express backend service
-- ethers.js v6 for blockchain integration
-- OpenAI API for AI-powered charity vetting
-- Event-driven architecture listening to `CharityRegistered` events
+### v1.0 - November 22, 2025
+**CharityRegistry**: `0x371bdAA80A977F16DEB9c56F5Bff47e717d60b95`
 
-**Verification Process:**
-1. Backend monitors CharityRegistry for new registrations
-2. Extracts charity details from blockchain
-3. GPT-4 analyzes charity legitimacy, impact, and transparency
-4. Multi-factor scoring system (0-100):
-   - Legitimacy Check (40%)
-   - Impact Potential (30%)
-   - Transparency (20%)
-   - Online Presence (10%)
-5. Automatically submits AI score to blockchain
-6. Auto-approves charities scoring ≥60/100
-7. Updates charity status to "Approved" on-chain
+**Initial Features**:
+- Single charity per wallet
+- Manual multi-sig approval
+- Basic AI scoring
 
-**Live Charities (as of Nov 14, 2025):**
-- **Charity ID 0:** Save the Children - Emergency Relief Fund (AI Score: 80/100, Status: Approved)
-- **Charity ID 1:** Education For Every Nigerian Child Initiative (AI Score: 75/100, Status: Approved)
-- **Charity ID 2:** Clean Water Initiative - Kenya (AI Score: 65/100, Status: Approved)
+## Deployment Steps
 
-**Key Features:**
-- Real-time blockchain event monitoring
-- Comprehensive AI-powered vetting
-- Automated approval workflow
-- Detailed reasoning and flagging system
-- IPFS document verification support
-- Web scraping for online presence verification
+### Prerequisites
 
----
+```bash
+# Node.js >= 18
+# Hardhat
+# Base Sepolia ETH for gas
+```
 
-## Contract Interactions
+### Environment Setup
 
-### Roles & Permissions
+Create `.env` files in each directory:
 
-**VibeToken:**
-- `MINTER_ROLE`: Granted to DonationManager (0x2b1F4bFc8DC29e96e86c5E2A85b48D5920f63fe7)
-- `ADMIN_ROLE`: Deployer (0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4)
+#### contracts/.env
+```bash
+PRIVATE_KEY=your_private_key_here
+BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
+BASESCAN_API_KEY=your_basescan_api_key
+```
 
-**ImpactNFT:**
-- `MINTER_ROLE`: Granted to DonationManager (0x2b1F4bFc8DC29e96e86c5E2A85b48D5920f63fe7)
-- `ADMIN_ROLE`: Deployer (0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4)
+#### backend/.env
+```bash
+RPC_URL=https://sepolia.base.org
+ADMIN_PRIVATE_KEY=your_private_key_here
+OPENAI_API_KEY=your_openai_api_key
+COINMARKETCAP_API_KEY=your_cmc_api_key
+PORT=3001
+NODE_ENV=development
+```
 
-**CharityRegistry:**
-- `ADMIN_ROLE`: Deployer (0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4)
-- `VERIFIER_ROLE`: Deployer (0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4)
-- `requiredApprovals`: Set to 1 for automated AI verification
+#### frontend/.env.local
+```bash
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
+NEXT_PUBLIC_ALCHEMY_API_KEY=your_alchemy_key
+```
 
----
+### Deploy Contracts
 
-## Deployment Flow
+```bash
+cd contracts
 
-1. **CharityRegistry** deployed first (no dependencies)
-2. **VibeToken** deployed (no dependencies)
-3. **ImpactNFT** deployed (no dependencies)
-4. **DonationManager** deployed (requires addresses of all three contracts)
-5. Granted `MINTER_ROLE` to DonationManager in VibeToken
-6. Granted `MINTER_ROLE` to DonationManager in ImpactNFT
+# Compile
+npx hardhat compile
 
----
+# Deploy to Base Sepolia
+npx hardhat run scripts/deploy.js --network baseSepolia
 
-## Testing Instructions
+# Verify on Basescan
+npx hardhat verify --network baseSepolia <CONTRACT_ADDRESS> <CONSTRUCTOR_ARGS>
+```
 
-### For Donors
+### Update Contract Addresses
 
-1. **Make a Donation:**
-   - Call `donateETH(charityId)` on DonationManager with ETH
-   - Automatically receive VIBE rewards (10 VIBE per 1 ETH)
-   - Receive Impact NFT if donation >= 1 ETH
+After deployment, update addresses in:
 
-2. **Stake VIBE Tokens:**
-   - Approve DonationManager to spend VIBE
-   - Call `stake(amount, lockPeriod)` on VibeToken
-   - Lock periods: 30, 90, or 180 days
-   - Earn APY: 5%, 10%, or 15% respectively
+1. **Frontend**: `frontend/lib/contracts/addresses.ts`
+2. **Backend**: `backend/src/config/contracts.ts`
 
-### For Charities
+### Copy ABIs
 
-1. **Register a Charity:**
-   - Call `registerCharity(name, description, ipfsHash, walletAddress)` on CharityRegistry
-   - Provide IPFS hash with 501(c)(3) documents
-   - Wait for AI vetting and multi-sig approval
+```bash
+# Copy CharityRegistry ABI to frontend
+cp contracts/artifacts/contracts/CharityRegistry.sol/CharityRegistry.json \
+   frontend/lib/contracts/CharityRegistry.json
+```
 
-2. **Check Charity Status:**
-   - Call `getCharity(charityId)` on CharityRegistry
-   - Check `status` field (0=Pending, 1=Approved, 2=Rejected, 3=Suspended)
+### Start Services
 
-### For Verifiers
+```bash
+# Terminal 1: Backend
+cd backend
+npm install
+npm run dev
 
-1. **Update AI Score:**
-   - Call `updateAiScore(charityId, score)` on CharityRegistry
-   - Score must be 0-100
+# Terminal 2: Frontend
+cd frontend
+npm install
+npm run dev
+```
 
-2. **Approve Charity:**
-   - Call `approveCharity(charityId)` on CharityRegistry
-   - Requires minimum AI score of 60
-   - Requires 2 approvals (multi-sig)
+## Verification
 
----
+### Contract Verification on Basescan
 
-## Important Links
+```bash
+# CharityRegistry
+npx hardhat verify --network baseSepolia \
+  0xc8928b40C1A494E1f039665E6f0C2ce64681254a \
+  0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4
 
-### Block Explorer
-- **Base Sepolia Basescan:** https://sepolia.basescan.org/
-- **Base Sepolia Faucet:** https://www.coinbase.com/faucets/base-ethereum-goerli-faucet
+# VibeToken
+npx hardhat verify --network baseSepolia \
+  0xc2780b90e32aAf93f7829929ac3A234Bc49617B6 \
+  0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4
 
-### Contract Verification
-All contracts are verified and their source code is viewable on Basescan. You can interact with them directly through the "Write Contract" tab on Basescan.
+# ImpactNFT
+npx hardhat verify --network baseSepolia \
+  0xc241E5103a6B1E404024ADbA170C4Ca81003B459 \
+  0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4 \
+  "https://api.cointribute.xyz/metadata"
 
-### IPFS for Metadata
-- Impact NFT metadata should be uploaded to IPFS
-- Base URI is set to: `https://api.cointribute.xyz/metadata`
-- Can be updated by admin using `setBaseMetadataURI()`
+# DonationManager
+npx hardhat verify --network baseSepolia \
+  0x2d70ECd4ee1010Ac4CE53b5a284eC0e3c96Ed748 \
+  0xc8928b40C1A494E1f039665E6f0C2ce64681254a \
+  0xc2780b90e32aAf93f7829929ac3A234Bc49617B6 \
+  0xc241E5103a6B1E404024ADbA170C4Ca81003B459 \
+  0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4 \
+  0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4
+```
 
----
+### System Health Checks
 
-## Security Considerations
+```bash
+# Check backend
+curl http://localhost:3001/health
 
-1. **Access Control:** All sensitive functions protected by role-based access control
-2. **Reentrancy Protection:** All external calls use `nonReentrant` modifier
-3. **Max Supply Cap:** VIBE token has a hard cap of 1B tokens
-4. **Fee Limits:** Platform fee capped at 10% maximum
-5. **Multi-sig Verification:** Charities require 2 approvals before activation
+# Check if backend is listening
+# Look for: "👂 Starting to listen for charity registrations..."
 
----
+# Test registration
+# 1. Go to http://localhost:3000/register-charity
+# 2. Fill form and submit
+# 3. Check backend logs for AI verification
+# 4. Charity should be approved within 5-10 seconds
+```
 
-## Next Steps
+## Troubleshooting
 
-### For Seedify Vibecoins Hackathon Submission
+### Backend Not Detecting Events
 
-1. ✅ Contracts deployed to Base Sepolia
-2. ✅ All contracts verified on Basescan
-3. ✅ Documentation prepared
-4. ✅ Frontend integration complete
-5. ✅ Backend AI verification system operational
-6. ✅ 3 live charities with real donations
-7. ✅ USDC donation support implemented
-8. 🔄 Multi-currency conversion feature (in progress)
-9. 🔄 Demo video creation
-10. 🔄 GitHub repository finalization
+```bash
+# Check contract address matches
+cat backend/src/config/contracts.ts
 
-### Completed Features
+# Restart backend
+pkill -f "tsx watch"
+cd backend && npm run dev
+```
 
-- ✅ Automated AI charity verification with GPT-4
-- ✅ Full-stack integration (Frontend + Backend + Blockchain)
-- ✅ ETH and USDC donation support with separate tracking
-- ✅ Dynamic token preference system
-- ✅ Fundraising goals and progress tracking
-- ✅ Cause detail pages with social sharing
-- ✅ Real-time blockchain event monitoring
-- ✅ Transaction debugging and error handling
-- ✅ **Multi-currency USD conversion with CoinMarketCap API**
-- ✅ **Real-time ETH/USDC price fetching (60-second refresh)**
-- ✅ **Unified USD display for all donations**
-- ✅ **Price conversion utilities and React hooks**
+### Frontend Shows Old Contract
 
-### Next Enhancements
+```bash
+# Hard refresh browser
+Cmd+Shift+R (Mac) or Ctrl+Shift+R (Windows)
 
-- ⏸️ Deploy to Base Mainnet when ready
-- ⏸️ Implement governance voting with VIBE tokens
-- ⏸️ Create Impact NFT artwork and metadata
-- ⏸️ DAO governance system
+# Or clear cache and restart
+cd frontend
+rm -rf .next
+npm run dev
+```
+
+### Transaction Failures
+
+```bash
+# Check gas estimation
+cd backend
+npx tsx scripts/testNewContract.ts
+
+# Should show: Gas estimate: ~343k
+```
+
+## Production Deployment (Future)
+
+### Mainnet Deployment Steps
+
+1. Update `hardhat.config.js` with mainnet RPC
+2. Ensure sufficient ETH for deployment (~0.1 ETH)
+3. Deploy contracts: `npx hardhat run scripts/deploy.js --network base`
+4. Verify contracts on Basescan
+5. Update all contract addresses in frontend/backend
+6. Run comprehensive tests
+7. Monitor first transactions closely
+
+### Security Considerations
+
+- [ ] External security audit
+- [ ] Bug bounty program
+- [ ] Multi-sig admin wallet
+- [ ] Emergency pause functionality
+- [ ] Rate limiting on backend
+- [ ] IPFS pinning service
+- [ ] Monitoring and alerting
 
 ---
 
-## Support
-
-For questions or issues, contact:
-- GitHub: https://github.com/[your-repo]
-- Email: [your-email]
-
----
-
-**Built with Vibe Coding using Claude Code for the Seedify Vibecoins Hackathon**
-
-*Smart contracts built using AI-assisted development tools as part of the Seedify Vibecoins initiative to accelerate blockchain application development.*
+*Last updated: November 25, 2025*
+*For issues, check logs in backend terminal and browser console*

@@ -11,8 +11,14 @@ Cointribute is a transparent, AI-vetted charity donation platform built on Base 
 
 ## Key Features
 
-- 🤖 **AI-Powered Vetting**: Automated charity verification using advanced AI scoring
+- 🤖 **Fully Automatic AI Verification**: Charities verified and approved in **5-10 seconds**
+  - AI scores 0-100 using GPT-4
+  - Score >= 60 → Automatic approval ✅
+  - Score < 60 → Automatic rejection ❌
 - 🔗 **Smart Contract Donations**: Transparent, immutable donation tracking
+- 🏢 **Multi-Charity Support**: Same wallet can register multiple charities
+  - 3-month cooldown between registrations
+  - Smart anti-spam protection
 - 💎 **Vibe Coins (VIBE)**: Impact verification tokens rewarding donors
 - 🎨 **Impact NFTs**: Dynamic NFTs for major contributors
 - 📊 **Real-Time Tracking**: Live donation flow visualization
@@ -75,6 +81,30 @@ ERC20 governance and reward token with staking capabilities.
 ### ImpactNFT.sol
 ERC721 NFTs for high-impact donors with dynamic metadata.
 
+## Current Deployment
+
+**Network**: Base Sepolia Testnet
+**Status**: ✅ **FULLY OPERATIONAL**
+**Last Updated**: November 25, 2025
+
+### Live Contract Addresses
+
+```
+CharityRegistry:  0xc8928b40C1A494E1f039665E6f0C2ce64681254a
+VibeToken:        0xc2780b90e32aAf93f7829929ac3A234Bc49617B6
+ImpactNFT:        0xc241E5103a6B1E404024ADbA170C4Ca81003B459
+DonationManager:  0x2d70ECd4ee1010Ac4CE53b5a284eC0e3c96Ed748
+```
+
+### What's New in v3.0
+- ✅ **Fully automatic AI verification** - No manual approval needed!
+- ✅ **5-10 second approval time** - Lightning fast
+- ✅ **Multi-charity per wallet** - With smart 3-month cooldown
+- ✅ **Gas optimized** - Only ~343k gas per registration
+- ✅ **Zero pending charities** - Everything processes automatically
+
+[View on Base Sepolia Basescan →](https://sepolia.basescan.org/address/0xc8928b40C1A494E1f039665E6f0C2ce64681254a)
+
 ## Quick Start
 
 ### Prerequisites
@@ -99,17 +129,51 @@ cp .env.example .env
 ### Development
 
 ```bash
-# Start local blockchain
-cd contracts && pnpm hardhat node
+# Terminal 1: Backend (with AI verification)
+cd backend
+npm run dev
 
-# Deploy contracts to local network
-pnpm hardhat run scripts/deploy.ts --network localhost
+# Terminal 2: Frontend
+cd frontend
+npm run dev
 
-# Start backend
-cd ../backend && pnpm dev
+# Frontend will be available at http://localhost:3000
+# Backend API at http://localhost:3001
+```
 
-# Start frontend
-cd ../frontend && pnpm dev
+### Testing the System
+
+1. **Register a Charity**
+   - Go to http://localhost:3000/register-charity
+   - Connect your wallet (Base Sepolia)
+   - Fill in charity details
+   - Submit transaction
+
+2. **Watch AI Verification** (in backend terminal)
+   - AI analyzes charity
+   - Scores 0-100
+   - Automatically approves if >= 60
+
+3. **View Results**
+   - Refresh http://localhost:3000/causes
+   - Charity should be approved within 5-10 seconds!
+
+### Deployment to Testnet
+
+```bash
+# Deploy all contracts to Base Sepolia
+cd contracts
+npx hardhat run scripts/deploy.js --network baseSepolia
+
+# Update contract addresses in:
+# - frontend/lib/contracts/addresses.ts
+# - backend/src/config/contracts.ts
+
+# Copy ABIs
+cp contracts/artifacts/contracts/CharityRegistry.sol/CharityRegistry.json \
+   frontend/lib/contracts/CharityRegistry.json
+
+# Restart services to pick up changes
 ```
 
 ## Deployment
@@ -144,6 +208,12 @@ pnpm hardhat run scripts/deploy.ts --network base-mainnet
 
 ## Documentation
 
+### Quick Links
+- **[PROGRESS.md](./PROGRESS.md)** - Development progress and recent achievements
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Deployment guide and contract addresses
+- **[PROJECT_STATUS.md](./PROJECT_STATUS.md)** - Current project status and metrics
+
+### Additional Resources
 - [Setup Guide](./docs/SETUP.md)
 - [API Documentation](./docs/API.md)
 - [Contract Documentation](./docs/CONTRACTS.md)

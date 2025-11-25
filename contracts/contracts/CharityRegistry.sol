@@ -40,16 +40,17 @@ contract CharityRegistry is AccessControl, ReentrancyGuard {
         bool isActive;
         uint256 totalETHDonations; // Track ETH donations separately
         uint256 totalUSDCDonations; // Track USDC donations separately (in USDC base units)
+        string[] imageHashes; // IPFS hashes for campaign images
     }
 
     // Storage
     mapping(uint256 => Charity) public charities;
-    mapping(address => uint256) public charityIdByAddress;
-    mapping(address => bool) public isRegistered;
+    mapping(address => uint256[]) public charitiesByAddress; // Multiple charities per wallet
+    mapping(address => uint256) public lastRegistrationTime; // Last registration timestamp
 
     uint256 public charityCount;
-    uint256 public minimumAiScore = 60; // Minimum score to be eligible for approval
-    uint256 public requiredApprovals = 2; // Multi-sig requirement
+    uint256 public minimumAiScore = 60; // Minimum score for automatic approval
+    uint256 public constant REGISTRATION_COOLDOWN = 90 days; // 3 months between registrations
 
     mapping(uint256 => mapping(address => bool)) public approvals;
     mapping(uint256 => uint256) public approvalCount;
@@ -92,6 +93,12 @@ contract CharityRegistry is AccessControl, ReentrancyGuard {
     event MinimumAiScoreUpdated(uint256 oldScore, uint256 newScore);
     event RequiredApprovalsUpdated(uint256 oldCount, uint256 newCount);
 
+    event CharityImagesAdded(
+        uint256 indexed charityId,
+        string[] imageHashes,
+        uint256 timestamp
+    );
+
     /**
      * @notice Constructor sets up initial roles
      * @param _admin Address of the initial admin
@@ -110,6 +117,7 @@ contract CharityRegistry is AccessControl, ReentrancyGuard {
      * @param _walletAddress Wallet to receive donations
      * @param _fundingGoal Target amount to raise (in wei)
      * @param _deadline Fundraising deadline (timestamp, 0 for no deadline)
+     * @param _imageHashes Initial IPFS hashes for campaign images (optional)
      * @return charityId The ID of the newly registered charity
      */
     function registerCharity(
@@ -118,15 +126,33 @@ contract CharityRegistry is AccessControl, ReentrancyGuard {
         string memory _ipfsHash,
         address _walletAddress,
         uint256 _fundingGoal,
-        uint256 _deadline
+        uint256 _deadline,
+        string[] memory _imageHashes
     ) external nonReentrant returns (uint256) {
         require(bytes(_name).length > 0, "Name cannot be empty");
         require(bytes(_ipfsHash).length > 0, "IPFS hash required");
         require(_walletAddress != address(0), "Invalid wallet address");
-        require(!isRegistered[_walletAddress], "Charity already registered");
         require(_fundingGoal > 0, "Funding goal must be greater than 0");
         if (_deadline > 0) {
             require(_deadline > block.timestamp, "Deadline must be in the future");
+        }
+
+        // Check cooldown period (3 months between registrations)
+        if (lastRegistrationTime[_walletAddress] > 0) {
+            require(
+                block.timestamp >= lastRegistrationTime[_walletAddress] + REGISTRATION_COOLDOWN,
+                "Must wait 3 months between charity registrations"
+            );
+        }
+
+        // Check if wallet has any active/pending charities
+        uint256[] storage walletCharities = charitiesByAddress[_walletAddress];
+        for (uint256 i = 0; i < walletCharities.length; i++) {
+            Charity storage existingCharity = charities[walletCharities[i]];
+            require(
+                !existingCharity.isActive && existingCharity.status != VerificationStatus.Pending,
+                "Cannot register new charity while you have an active or pending charity"
+            );
         }
 
         uint256 charityId = charityCount++;
@@ -147,11 +173,12 @@ contract CharityRegistry is AccessControl, ReentrancyGuard {
             deadline: _deadline,
             isActive: true,
             totalETHDonations: 0,
-            totalUSDCDonations: 0
+            totalUSDCDonations: 0,
+            imageHashes: _imageHashes
         });
 
-        charityIdByAddress[_walletAddress] = charityId;
-        isRegistered[_walletAddress] = true;
+        charitiesByAddress[_walletAddress].push(charityId);
+        lastRegistrationTime[_walletAddress] = block.timestamp;
 
         emit CharityRegistered(charityId, _walletAddress, _name, block.timestamp);
 
@@ -171,57 +198,24 @@ contract CharityRegistry is AccessControl, ReentrancyGuard {
         require(_score <= 100, "Score must be 0-100");
 
         Charity storage charity = charities[_charityId];
+        require(charity.status == VerificationStatus.Pending, "Charity already verified");
+
         uint256 oldScore = charity.aiScore;
         charity.aiScore = _score;
 
         emit AiScoreUpdated(_charityId, oldScore, _score, block.timestamp);
-    }
 
-    /**
-     * @notice Approve charity verification (multi-sig)
-     * @param _charityId Charity ID to approve
-     */
-    function approveCharity(uint256 _charityId)
-        external
-        onlyRole(VERIFIER_ROLE)
-    {
-        require(_charityId < charityCount, "Invalid charity ID");
-        Charity storage charity = charities[_charityId];
-        require(
-            charity.status == VerificationStatus.Pending,
-            "Charity not pending"
-        );
-        require(
-            charity.aiScore >= minimumAiScore,
-            "AI score below minimum"
-        );
-        require(!approvals[_charityId][msg.sender], "Already approved");
-
-        approvals[_charityId][msg.sender] = true;
-        approvalCount[_charityId]++;
-
-        if (approvalCount[_charityId] >= requiredApprovals) {
+        // Automatic approval/rejection based on AI score
+        if (_score >= minimumAiScore) {
             _verifyCharity(_charityId, VerificationStatus.Approved);
+        } else {
+            _verifyCharity(_charityId, VerificationStatus.Rejected);
         }
     }
 
-    /**
-     * @notice Reject a charity application
-     * @param _charityId Charity ID to reject
-     */
-    function rejectCharity(uint256 _charityId)
-        external
-        onlyRole(VERIFIER_ROLE)
-    {
-        require(_charityId < charityCount, "Invalid charity ID");
-        Charity storage charity = charities[_charityId];
-        require(
-            charity.status == VerificationStatus.Pending,
-            "Charity not pending"
-        );
-
-        _verifyCharity(_charityId, VerificationStatus.Rejected);
-    }
+    // Manual approval/rejection removed - now fully automatic based on AI score
+    // Charities are automatically approved if score >= minimumAiScore
+    // Charities are automatically rejected if score < minimumAiScore
 
     /**
      * @notice Suspend an approved charity
@@ -320,19 +314,31 @@ contract CharityRegistry is AccessControl, ReentrancyGuard {
         emit MinimumAiScoreUpdated(oldScore, _newScore);
     }
 
-    /**
-     * @notice Update required approvals for verification
-     * @param _newCount New approval count
-     */
-    function setRequiredApprovals(uint256 _newCount)
-        external
-        onlyRole(ADMIN_ROLE)
-    {
-        require(_newCount > 0, "Must require at least 1 approval");
-        uint256 oldCount = requiredApprovals;
-        requiredApprovals = _newCount;
+    // setRequiredApprovals removed - approval is now automatic based on AI score
 
-        emit RequiredApprovalsUpdated(oldCount, _newCount);
+    /**
+     * @notice Add or update images for a charity campaign
+     * @param _charityId Charity ID
+     * @param _imageHashes Array of IPFS hashes for campaign images
+     */
+    function addCharityImages(uint256 _charityId, string[] memory _imageHashes)
+        external
+    {
+        require(_charityId < charityCount, "Invalid charity ID");
+        Charity storage charity = charities[_charityId];
+
+        // Only charity wallet owner can add images
+        require(
+            msg.sender == charity.walletAddress,
+            "Only charity owner can add images"
+        );
+
+        // Add new images to existing array
+        for (uint256 i = 0; i < _imageHashes.length; i++) {
+            charity.imageHashes.push(_imageHashes[i]);
+        }
+
+        emit CharityImagesAdded(_charityId, _imageHashes, block.timestamp);
     }
 
     /**
@@ -350,17 +356,16 @@ contract CharityRegistry is AccessControl, ReentrancyGuard {
     }
 
     /**
-     * @notice Get charity ID by wallet address
+     * @notice Get all charity IDs by wallet address
      * @param _wallet Charity wallet address
-     * @return Charity ID
+     * @return Array of charity IDs
      */
-    function getCharityIdByWallet(address _wallet)
+    function getCharitiesByWallet(address _wallet)
         external
         view
-        returns (uint256)
+        returns (uint256[] memory)
     {
-        require(isRegistered[_wallet], "Charity not registered");
-        return charityIdByAddress[_wallet];
+        return charitiesByAddress[_wallet];
     }
 
     /**

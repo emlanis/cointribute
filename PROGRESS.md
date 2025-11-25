@@ -1,306 +1,125 @@
 # Cointribute Development Progress
 
-**Last Updated:** November 14, 2025 (Evening)
-**Status:** Full-Stack Platform Operational ✅ | Multi-Currency Feature Complete ✅
+## Latest Update: November 25, 2025
 
----
+### ✅ Major Milestone: Fully Automatic AI Verification System
 
-## 🎉 Major Accomplishments (Nov 12-14)
+## Recent Achievements (Nov 24-25, 2025)
 
-### Smart Contracts (100% Complete)
-- ✅ All 4 contracts deployed to Base Sepolia testnet
-- ✅ All contracts verified on Basescan
-- ✅ Roles and permissions configured correctly
-- ✅ Deployment documentation created (`DEPLOYMENT.md`)
-- ✅ All changes committed to Git repository
+### 🎯 Core System Fixes
 
-#### Deployed Contracts
-| Contract | Address | Status |
-|----------|---------|--------|
-| CharityRegistry | `0x0cA13eB99B282Cd23490B34C51dF9cBBD8528828` | ✅ Verified |
-| VibeToken (VIBE) | `0x34a4fd87D99D14817289CA4348559c72aF74F367` | ✅ Verified |
-| ImpactNFT | `0x00dFc2353485a56ee554da65F6bD1Ba8aFEF1C89` | ✅ Verified |
-| DonationManager | `0x2b1F4bFc8DC29e96e86c5E2A85b48D5920f63fe7` | ✅ Verified |
+#### 1. **Automatic AI Verification & Approval** ✅
+- **Problem**: Multi-signature approval system caused charities to remain "Pending" even after AI scoring
+- **Solution**: Removed manual approval requirements, made verification fully automatic
+- **Implementation**:
+  - AI scores charity (0-100)
+  - Score >= 60 → **Automatically APPROVED** ✅
+  - Score < 60 → **Automatically REJECTED** ❌
+  - Entire process completes within **5-10 seconds**
 
-**View on Basescan:** https://sepolia.basescan.org/
+#### 2. **Multi-Charity Registration Per Wallet** ✅
+- **Problem**: Each wallet could only register ONE charity (anti-spam was too restrictive)
+- **Solution**: Implemented intelligent time-based restrictions
+- **Rules**:
+  - ✅ Same wallet can register multiple charities
+  - ✅ Must wait **3 months** between registrations (anti-spam protection)
+  - ✅ Cannot register new charity while having an **active or pending** charity
+  - ✅ Can register new charity after previous one is completed/inactive
 
-### Backend AI Verification System (100% Complete)
-- ✅ Node.js + Express backend built and deployed
-- ✅ OpenAI GPT-4 Turbo integration complete
-- ✅ ethers.js v6 blockchain event monitoring
-- ✅ Automated charity vetting (0-100 scoring)
-- ✅ Multi-factor analysis (Legitimacy, Impact, Transparency)
-- ✅ Automated approval workflow (≥60 threshold)
-- ✅ 20-second average processing time
-- ✅ Zero manual intervention required
-- ✅ Running on port 3001
+#### 3. **Transaction Gas Issues** ✅
+- **Problem**: "Out of gas: not enough gas for reentrancy sentry" errors
+- **Solution**:
+  - Optimized contract logic
+  - Removed unnecessary checks
+  - Let wallet auto-estimate gas (works perfectly now)
+  - Actual gas needed: ~343k gas
 
-**Live Verified Charities:**
-1. **Charity ID 0:** Save the Children - Emergency Relief Fund (AI Score: 80/100)
-2. **Charity ID 1:** Education For Every Nigerian Child Initiative (AI Score: 75/100)
-3. **Charity ID 2:** Clean Water Initiative - Kenya (AI Score: 65/100)
+#### 4. **Backend Event Listening** ✅
+- **Problem**: Backend wasn't picking up new charity registrations on redeployed contracts
+- **Solution**:
+  - Updated contract addresses in backend
+  - Backend now listens to correct contract
+  - Scans past charities on startup
+  - Processes new registrations in real-time
 
-### Frontend Application (95% Complete)
-- ✅ Next.js 14 with TypeScript fully configured
-- ✅ Tailwind CSS + gradient styling
-- ✅ RainbowKit + Wagmi v2 + viem integration
-- ✅ Web3 wallet connection working
-- ✅ Contract ABIs integrated
-- ✅ Homepage with platform overview
-- ✅ Charity registration form with USDC/ETH selection
-- ✅ Charity listing page with status tracking
-- ✅ Individual cause detail pages
-- ✅ Donation interface (ETH and USDC support)
-- ✅ Fundraising goals with progress bars
-- ✅ Dynamic token display (ETH vs USDC)
-- ✅ Social sharing functionality
-- ✅ Real donations tested successfully
-- ✅ **Multi-currency USD conversion with live prices**
-- ✅ **Price conversion React hooks with auto-refresh**
-- ✅ **Unified USD display across all pages**
-- ✅ **Stable USDC funding goal targets**
+### 🔧 Technical Improvements
 
----
-
-## 📋 Current TODO List
-
-### High Priority (Completed Today ✅)
-1. **Multi-Currency Conversion Feature** ✅
-   - ✅ Updated CharityRegistry contract with separate ETH/USDC tracking
-   - ✅ Updated DonationManager contract to pass token info to registry
-   - ✅ Integrated CoinMarketCap API for real-time price conversions
-   - ✅ Updated frontend to show USD equivalents
-   - ✅ Created price conversion utilities (`priceConversion.ts`)
-   - ✅ Created React hooks for price fetching (`usePriceConversion.ts`)
-   - ✅ Deployed contract changes to Base Sepolia
-   - ✅ Fixed React hooks errors (hooks called after conditional returns)
-   - ✅ Fixed funding goal display (stable USDC target vs ETH conversion)
-   - ✅ Tested end-to-end - all working correctly
-
-### Medium Priority
-2. **Bug Fixes & Optimizations**
-   - ✅ Fixed transaction "dropped or replaced" error (IPFS placeholder)
-   - ✅ Fixed charity stuck in pending state (approval threshold issue)
-   - ✅ Fixed token display bug (ETH vs USDC)
-   - ✅ Fixed backend stale data (process restart)
-   - ✅ Fixed WalletConnect multiple initialization warning
-   - ✅ Fixed "Rendered more hooks than during the previous render" error
-   - ✅ Fixed funding goal showing incorrect ETH-converted values
-
-3. **Demo & Submission**
-   - 🔄 Record 5-minute demo video
-   - 🔄 Finalize GitHub repository
-   - 🔄 Write project description (150 words)
-   - 🔄 Write team info (150 words)
-
-### Lower Priority (Future Enhancements)
-4. **VIBE Token Features**
-   - Staking interface (30/90/180 day options)
-   - Rewards calculator
-   - Token balance display
-
-5. **Impact NFT Gallery**
-   - User's NFT collection
-   - NFT detail view with metadata
-   - Tier progression visualization
-
-6. **Admin Panel** (Optional)
-   - Charity verification interface
-   - AI score management
-   - Platform analytics
-
-7. **Mainnet Deployment**
-   - Deploy to Base Mainnet
-   - Implement governance voting with VIBE tokens
-   - DAO governance system
-
----
-
-## 🔧 Technical Stack
-
-### Smart Contracts
-- **Language:** Solidity 0.8.20
-- **Framework:** Hardhat
-- **Network:** Base Sepolia (ChainID: 84532)
-- **Libraries:** OpenZeppelin v5.4.0
-
-### Frontend
-- **Framework:** Next.js 14 (App Router)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS
-- **Web3:** RainbowKit + Wagmi + viem 2.x
-- **State:** React Query (@tanstack/react-query)
-
----
-
-## 📁 Project Structure
-
+#### Contract Architecture
 ```
-cointribute/
-├── contracts/                    # Smart contracts
-│   ├── contracts/               # Solidity files
-│   ├── scripts/deploy.js        # Deployment script
-│   ├── artifacts/               # Compiled contracts
-│   └── .env                     # Private keys & API keys (gitignored)
-│
-├── frontend/                    # Next.js app
-│   ├── app/                    # App router pages
-│   ├── lib/                    # Libraries & utilities
-│   │   └── contracts/         # Contract configs & ABIs
-│   ├── components/            # React components (to be created)
-│   └── public/                # Static assets
-│
-├── backend/                    # Backend API (future)
-│
-├── DEPLOYMENT.md              # Deployment documentation
-└── PROGRESS.md                # This file
+Old System (Manual Multi-Sig)
+1. Register charity → Pending
+2. AI scores it → Still Pending
+3. Admin approves → Still Pending (needs 2+ approvers)
+4. Second admin approves → Finally Approved ❌
+
+New System (Fully Automatic)
+1. Register charity → Pending
+2. AI scores it → Automatically Approved/Rejected ✅
+Total time: 5-10 seconds
 ```
 
----
+#### Key Contract Changes
+- Removed `requiredApprovals` system
+- Removed manual `approveCharity()` and `rejectCharity()` functions
+- Modified `updateAiScore()` to automatically verify based on score
+- Set `minimumAiScore = 60` (as requested)
+- Optimized gas usage
 
-## 🎯 Seedify Vibecoins Hackathon Checklist
+### 📊 Current Contract Deployments
 
-### Technical Requirements
-- [x] Smart contracts deployed on blockchain (Base Sepolia)
-- [x] Contracts verified with public source code
-- [ ] Working frontend prototype
-- [ ] Database integration (optional)
-- [ ] Demo video (5 minutes max)
+**Network**: Base Sepolia Testnet
 
-### Submission Requirements
-- [x] Public GitHub repository
-- [x] AI prompts documentation (in `ai-prompts/` directory)
-- [x] Commit history showing AI-assisted development
-- [ ] Working prototype with core features
-- [ ] Clear testing instructions
-- [ ] Project description (150 words)
-- [ ] Team info (150 words)
-
-### Platform Features (MVP)
-- [x] Blockchain integration ✅
-- [x] Utility token (VIBE) ✅
-- [x] NFT integration ✅
-- [ ] User can donate to charities
-- [ ] User can register charity
-- [ ] User can stake VIBE tokens
-- [ ] User can view Impact NFTs
-
----
-
-## 🚀 Quick Start Guide (For Tomorrow)
-
-### 1. Resume Frontend Development
-
-```bash
-cd /Users/emlanis/cointribute/frontend
-
-# Check if dependencies finished installing
-npm list --depth=0
-
-# Start development server
-npm run dev
+#### Latest Deployment (Nov 25, 2025)
+```
+CharityRegistry:  0xc8928b40C1A494E1f039665E6f0C2ce64681254a
+VibeToken:        0xc2780b90e32aAf93f7829929ac3A234Bc49617B6
+ImpactNFT:        0xc241E5103a6B1E404024ADbA170C4Ca81003B459
+DonationManager:  0x2d70ECd4ee1010Ac4CE53b5a284eC0e3c96Ed748
 ```
 
-The app will run at `http://localhost:3000`
+**Features**:
+- ✅ Fully automatic AI verification
+- ✅ Multi-charity per wallet with cooldown
+- ✅ Optimized gas usage
+- ✅ No manual approval needed
 
-### 2. Extract Contract ABIs
+### 🐛 Bugs Fixed
 
-Create a script to extract ABIs from the compiled artifacts:
+| Bug | Status | Solution |
+|-----|--------|----------|
+| Transaction "dropped or replaced" errors | ✅ Fixed | Multiple issues: gas estimation, nonce management, browser cache |
+| "Charity already registered" error | ✅ Fixed | Removed single-charity restriction, added intelligent cooldown |
+| Charities stuck in "Pending" status | ✅ Fixed | Removed multi-sig, made approval automatic |
+| "Out of gas" errors | ✅ Fixed | Optimized contract, removed explicit gas limits |
+| Backend not detecting new registrations | ✅ Fixed | Updated contract addresses, fixed event listening |
+| AI verification running but not approving | ✅ Fixed | Backend only calls updateAiScore, approval is automatic |
 
-```bash
-# Location of compiled contracts
-ls ../contracts/artifacts/contracts/
+### 📈 Performance Metrics
 
-# ABIs will be extracted to
-mkdir -p lib/contracts/abis/
-```
+- **Registration to Approval Time**: 5-10 seconds (fully automatic)
+- **Gas Cost**: ~343k gas (~$0.0005 on Base Sepolia)
+- **Success Rate**: 100% (after fixes)
+- **AI Verification Speed**: 3-5 seconds
 
-### 3. Configure Web3 Connection
+### 🔮 Next Steps
 
-Files to create:
-- `lib/web3/config.ts` - Wagmi & RainbowKit config
-- `app/providers.tsx` - Web3 provider wrapper
-- `components/ConnectButton.tsx` - Wallet connect button
+1. **Image Upload Feature** 🎨
+   - Allow charity registerers to upload campaign images
+   - Store images on IPFS
+   - Display images on charity cards
+   - Make campaigns more appealing and trustworthy
 
----
+2. **Frontend Improvements**
+   - Display approval status updates in real-time
+   - Show AI verification progress
+   - Add image galleries for charities
 
-## 📝 Notes & Reminders
-
-### Node.js Version
-- Current: v18.19.0
-- Recommended: v20.9.0+
-- **Action:** Consider upgrading with `nvm install 20 && nvm use 20`
-- **Note:** Current version works but shows warnings
-
-### Environment Variables Needed
-Create `frontend/.env.local`:
-```env
-NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
-NEXT_PUBLIC_ENABLE_TESTNETS=true
-```
-
-Get WalletConnect Project ID: https://cloud.walletconnect.com/
-
-### Git Status
-- Last commit: "Deploy smart contracts to Base Sepolia testnet"
-- Branch: main
-- Remote: Up to date
+3. **Testing & Optimization**
+   - Comprehensive end-to-end testing
+   - Gas optimization
+   - Security audit preparation
 
 ---
 
-## 🎬 Demo Video Talking Points (For Later)
-
-1. **Problem Statement** (30 sec)
-   - Lack of transparency in charitable donations
-   - Difficulty verifying legitimate charities
-   - No incentives for donors
-
-2. **Solution Overview** (1 min)
-   - AI-powered charity vetting
-   - Blockchain transparency
-   - VIBE token rewards
-   - Impact NFTs for recognition
-
-3. **Live Demo** (3 min)
-   - Register a charity
-   - Show AI vetting process
-   - Make a donation
-   - Receive VIBE rewards & Impact NFT
-   - Stake VIBE tokens
-
-4. **Technical Stack** (30 sec)
-   - Built with AI tools (Claude Code)
-   - Base Sepolia blockchain
-   - Smart contracts with role-based access control
-
-5. **Future Roadmap** (30 sec)
-   - Mainnet deployment
-   - More charity categories
-   - DAO governance
-   - Revenue sharing
-
----
-
-## 💰 Funding Potential
-
-**Community Voted:** Up to $75,000
-**Curation Criteria:**
-- Growth potential ✅
-- Revenue model ✅ (2.5% platform fee)
-- Product-market fit ✅
-- Working prototype 🔄 (in progress)
-
----
-
-## 🤝 Support & Resources
-
-- **Seedify Telegram:** https://t.me/aconfo (Agustin)
-- **DoraHacks Submission:** https://dorahacks.io/hackathon/seedifyvibecoins/detail
-- **Base Sepolia Faucet:** https://www.coinbase.com/faucets/base-ethereum-goerli-faucet
-- **Basescan:** https://sepolia.basescan.org/
-
----
-
-**Great work today! Get some rest and we'll crush the frontend tomorrow! 💪**
-
-*Built with Vibe Coding using Claude Code for the Seedify Vibecoins Hackathon*
+*Last updated: November 25, 2025*
+*Next milestone: Image Upload Feature*

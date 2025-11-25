@@ -1,14 +1,15 @@
 /**
  * Contract Addresses for Cointribute Platform
  * Network: Base Sepolia Testnet
- * Deployed: November 14, 2025 (Updated with Multi-Currency Support)
+ * Deployed: November 24, 2025
+ * Features: Multiple charities per wallet with 3-month cooldown + active charity check
  */
 
 export const CONTRACT_ADDRESSES = {
-  CharityRegistry: '0x1D7503fCC34eD0e16CDEE2EbCdE02B5a1A598DBF' as `0x${string}`,
-  VibeToken: '0x01BC0683f9Af50b1505bFBEaF46eCCdfa65046C3' as `0x${string}`,
-  ImpactNFT: '0x3E259f629c804dc7e4dE23b3f5a96D44A59db998' as `0x${string}`,
-  DonationManager: '0x74b7F1173347ac24f0E69356b540C0873A1f144F' as `0x${string}`,
+  CharityRegistry: '0xc8928b40C1A494E1f039665E6f0C2ce64681254a' as `0x${string}`,
+  VibeToken: '0xc2780b90e32aAf93f7829929ac3A234Bc49617B6' as `0x${string}`,
+  ImpactNFT: '0xc241E5103a6B1E404024ADbA170C4Ca81003B459' as `0x${string}`,
+  DonationManager: '0x2d70ECd4ee1010Ac4CE53b5a284eC0e3c96Ed748' as `0x${string}`,
   // USDC on Base Sepolia
   USDC: '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as `0x${string}`,
 } as const;

@@ -35,9 +35,18 @@ export default function RegisterCharityPage() {
         deadline: '',
         preferredToken: 'ETH',
       });
-      alert('🎉 Registration submitted! Your cause will be reviewed by our AI verification system.');
+      alert('🎉 Registration submitted! Your cause will be reviewed by our AI verification system within seconds.');
+      reset();
     }
-  }, [isSuccess]);
+  }, [isSuccess, reset]);
+
+  useEffect(() => {
+    if (error) {
+      console.error('Transaction error:', error);
+      alert(`❌ Transaction failed: ${error.message}\n\nTip: Wait 30 seconds and try again. Make sure you have enough Base Sepolia ETH for gas.`);
+      reset();
+    }
+  }, [error, reset]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,6 +94,7 @@ export default function RegisterCharityPage() {
           formData.walletAddress as `0x${string}`,
           fundingGoalWei,
           deadlineTimestamp,
+          [], // imageHashes - empty array for now, will add upload feature next
         ],
       });
     } catch (err: any) {

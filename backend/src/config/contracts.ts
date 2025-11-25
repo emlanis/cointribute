@@ -1,5 +1,5 @@
 export const CONTRACT_ADDRESSES = {
-  CharityRegistry: '0x1D7503fCC34eD0e16CDEE2EbCdE02B5a1A598DBF',
+  CharityRegistry: '0xc8928b40C1A494E1f039665E6f0C2ce64681254a',
 } as const;
 
 export const CHARITY_REGISTRY_ABI = [
@@ -42,7 +42,8 @@ export const CHARITY_REGISTRY_ABI = [
           {"name": "deadline", "type": "uint256"},
           {"name": "isActive", "type": "bool"},
           {"name": "totalETHDonations", "type": "uint256"},
-          {"name": "totalUSDCDonations", "type": "uint256"}
+          {"name": "totalUSDCDonations", "type": "uint256"},
+          {"name": "imageHashes", "type": "string[]"}
         ],
         "name": "charity",
         "type": "tuple"
@@ -91,6 +92,16 @@ export const CHARITY_REGISTRY_ABI = [
       {"name": "_newCount", "type": "uint256"}
     ],
     "name": "setRequiredApprovals",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"name": "role", "type": "bytes32"},
+      {"name": "account", "type": "address"}
+    ],
+    "name": "grantRole",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

@@ -125,26 +125,14 @@ export class BlockchainListener {
       const scoreReceipt = await scoreTx.wait();
       console.log(`   ✅ Score updated in block ${scoreReceipt.blockNumber}`);
 
-      // Step 2: Approve or reject
+      // Approval/rejection happens automatically in the contract based on score
       if (approved) {
-        console.log(`   Approving charity...`);
-        const approveTx = await this.contract.approveCharity(charityId);
-        console.log(`   Approval transaction hash: ${approveTx.hash}`);
-
-        const approveReceipt = await approveTx.wait();
-        console.log(`   ✅ Approval submitted in block ${approveReceipt.blockNumber}`);
-
-        return approveReceipt;
+        console.log(`   ✅ Charity automatically APPROVED (score >= 60)`);
       } else {
-        console.log(`   Rejecting charity...`);
-        const rejectTx = await this.contract.rejectCharity(charityId);
-        console.log(`   Rejection transaction hash: ${rejectTx.hash}`);
-
-        const rejectReceipt = await rejectTx.wait();
-        console.log(`   ✅ Rejection confirmed in block ${rejectReceipt.blockNumber}`);
-
-        return rejectReceipt;
+        console.log(`   ❌ Charity automatically REJECTED (score < 60)`);
       }
+
+      return scoreReceipt;
     } catch (error: any) {
       console.error(`   ❌ Transaction failed:`, error.message);
       throw error;
