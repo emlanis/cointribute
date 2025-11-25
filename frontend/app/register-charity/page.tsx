@@ -56,8 +56,8 @@ export default function RegisterCharityPage() {
       return;
     }
 
-    if (!formData.name || !formData.description || !formData.walletAddress || !formData.fundingGoal) {
-      alert('Please fill in all required fields');
+    if (!formData.name || !formData.description || !formData.walletAddress || !formData.fundingGoal || !formData.deadline) {
+      alert('Please fill in all required fields including the campaign deadline');
       return;
     }
 
@@ -65,10 +65,14 @@ export default function RegisterCharityPage() {
       // Convert funding goal from ETH/USDC to wei
       const fundingGoalWei = parseEther(formData.fundingGoal);
 
-      // Convert deadline to timestamp (0 if not set)
-      const deadlineTimestamp = formData.deadline
-        ? BigInt(Math.floor(new Date(formData.deadline).getTime() / 1000))
-        : BigInt(0);
+      // Convert deadline to timestamp (REQUIRED)
+      const deadlineTimestamp = BigInt(Math.floor(new Date(formData.deadline).getTime() / 1000));
+
+      // Validate deadline is in the future
+      if (deadlineTimestamp <= BigInt(Math.floor(Date.now() / 1000))) {
+        alert('Deadline must be in the future');
+        return;
+      }
 
       // Store preferred token in description for now (until contract upgrade)
       const descriptionWithToken = `${formData.description}\n\n[Preferred Donation Token: ${formData.preferredToken}]`;
@@ -300,10 +304,10 @@ export default function RegisterCharityPage() {
                 </p>
               </div>
 
-              {/* Deadline (Optional) */}
+              {/* Campaign Deadline (REQUIRED) */}
               <div>
                 <label htmlFor="deadline" className="block text-sm font-medium text-gray-900 mb-2">
-                  Campaign Deadline (Optional)
+                  Campaign Deadline <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -312,11 +316,17 @@ export default function RegisterCharityPage() {
                   value={formData.deadline}
                   onChange={handleInputChange}
                   min={new Date().toISOString().split('T')[0]}
+                  required
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border text-gray-900 placeholder:text-gray-400"
                 />
                 <p className="mt-1 text-xs text-gray-600">
-                  Set a deadline for your fundraising campaign. Leave empty for no deadline.
+                  <strong>Required:</strong> Campaign deadline for fundraising. Funds will be automatically released when goal is reached OR deadline passes.
                 </p>
+                <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
+                  <p className="text-xs text-amber-900">
+                    💡 <strong>How it works:</strong> Donations are held until (1) your goal is reached OR (2) deadline passes. Whichever comes first triggers automatic fund release!
+                  </p>
+                </div>
               </div>
 
               {/* Error Display */}
