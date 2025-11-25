@@ -1,5 +1,5 @@
 export const CONTRACT_ADDRESSES = {
-  CharityRegistry: '0xc8928b40C1A494E1f039665E6f0C2ce64681254a',
+  CharityRegistry: '0x3c921FCB6E75bDD7C0386D14CA5594030D7e6df0',
 } as const;
 
 export const CHARITY_REGISTRY_ABI = [
