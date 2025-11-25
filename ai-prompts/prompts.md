@@ -535,24 +535,220 @@ Investigate:
 
 ---
 
-**Last Updated**: 2025-11-14
+## Image Upload & GPT-4 Vision Integration Prompts
+
+### Prompt 17: Backend Image Upload System
+**Date**: 2025-11-26
+**Purpose**: Implement charity image upload and processing system
+**Prompt**:
+```
+Create a complete image upload system for the backend:
+- Use Multer for handling multipart/form-data file uploads
+- Implement Sharp for automatic image optimization and resizing
+- Support JPG, JPEG, PNG, and WebP formats
+- Limit file size to 5MB per image, max 5 images per charity
+- Store images in /backend/uploads/ directory
+- Create image registry JSON file mapping walletAddress/charityId to image URLs
+- Implement API endpoints:
+  - POST /api/upload-images: Accept images with wallet address
+  - GET /api/charity-images/:id: Return array of image URLs for charity
+- Serve static files from /uploads/ directory
+- Move images from wallet mapping to charityId after verification
+```
+
+**Output**: Complete image upload service with processing, storage, and API endpoints
+
+**Reasoning**: Enable charities to upload campaign images to build trust and show authenticity
+
+---
+
+### Prompt 18: GPT-4 Vision Image Analysis
+**Date**: 2025-11-26
+**Purpose**: Integrate GPT-4 Vision API for analyzing uploaded charity images
+**Prompt**:
+```
+Enhance AI verification service to analyze uploaded images using GPT-4 Vision:
+- Integrate gpt-4-vision-preview model from OpenAI
+- Analyze images for:
+  1. Relevance: Do images relate to the charity's stated mission?
+  2. Authenticity: Are these real photos or stock images?
+  3. Appropriateness: Is content suitable for a charitable cause?
+  4. Quality: Are images clear, well-lit, and professional?
+- Return structured JSON with:
+  - score: 0-100 (quality and relevance)
+  - valid: boolean (appropriate for platform)
+  - reasoning: detailed explanation
+- Integrate image analysis into overall charity verification
+- Boost AI score for relevant, high-quality images
+- Lower score for poor/irrelevant images
+```
+
+**Output**: GPT-4 Vision integration analyzing charity images and contributing to verification score
+
+**OpenAI Vision Prompt Used**:
+```
+Analyze these images submitted for a charity campaign and evaluate:
+
+1. RELEVANCE (0-30 points): Do the images relate to the charity's mission and cause?
+2. AUTHENTICITY (0-25 points): Are these genuine photos or stock images?
+3. APPROPRIATENESS (0-25 points): Is the content suitable for a charitable cause?
+4. QUALITY (0-20 points): Are images clear, well-lit, and professional?
+
+Charity Information:
+Name: {name}
+Description: {description}
+
+Respond in JSON format:
+{
+  "score": 0-100,
+  "valid": true/false,
+  "reasoning": "detailed explanation",
+  "breakdown": {
+    "relevance": 0-30,
+    "authenticity": 0-25,
+    "appropriateness": 0-25,
+    "quality": 0-20
+  }
+}
+```
+
+---
+
+### Prompt 19: Frontend Image Upload Interface
+**Date**: 2025-11-26
+**Purpose**: Create drag-and-drop image upload UI for charity registration
+**Prompt**:
+```
+Build an image upload interface in the charity registration form:
+- Implement drag-and-drop file upload functionality
+- Show image previews before submission
+- Allow uploading up to 5 images (JPG, PNG, WebP)
+- Display file size validation (5MB max per image)
+- Show upload progress indicator
+- Allow removing individual images before submission
+- Upload images to backend API before form submission
+- Store returned image URLs with wallet address
+- Handle upload errors gracefully with user feedback
+```
+
+**Output**: Drag-and-drop image upload UI integrated into charity registration flow
+
+---
+
+### Prompt 20: Social Media-Style Image Galleries
+**Date**: 2025-11-26
+**Purpose**: Display charity images across all pages
+**Prompt**:
+```
+Create image display components for charity images:
+- Charity Cards (/charities page):
+  - Display first uploaded image at top of card
+  - Fallback to handshake emoji if no images
+  - Add verified badge overlay on images
+
+- Cause Detail Pages (/causes/[id]):
+  - Full image gallery with navigation controls
+  - Arrow buttons to browse through all images
+  - Thumbnail strip at bottom for quick navigation
+  - Image counter showing position (e.g., "2 / 4")
+  - Responsive layout with proper image sizing
+
+- Homepage Featured Causes:
+  - Show first image instead of handshake emoji
+  - Maintain consistent card design
+
+- Technical Requirements:
+  - Fetch images from GET /api/charity-images/:id endpoint
+  - Use React useState and useEffect for data fetching
+  - Handle image loading errors with graceful fallback
+  - No direct DOM manipulation (React-friendly)
+  - Responsive design for mobile and desktop
+```
+
+**Output**: Social media-style image galleries on all pages with navigation and responsive design
+
+---
+
+### Debug 8: DOM Manipulation Breaking React
+**Date**: 2025-11-26
+**Issue**: Pages showing blank after implementing image galleries
+**Debugging Prompt**:
+```
+After adding image upload feature, pages are rendering blank.
+Images were fetching correctly initially but pages stopped working after browser refresh.
+
+Investigate:
+1. Check for unsafe DOM manipulation in React components
+2. Look for innerHTML usage that could break virtual DOM
+3. Verify image error handlers aren't causing crashes
+4. Check if backend image API is responding correctly
+```
+
+**Root Cause**: Image error handler used `innerHTML` to manipulate DOM directly:
+```javascript
+e.currentTarget.parentElement!.innerHTML = '<div>...</div>';
+```
+This breaks React's virtual DOM and causes page to crash.
+
+**Solution**: Replace DOM manipulation with React state:
+```typescript
+const [imageError, setImageError] = useState(false);
+
+// In render:
+{images.length > 0 && !imageError ? (
+  <img src={images[0]} onError={() => setImageError(true)} />
+) : (
+  <div>🤝</div>
+)}
+```
+
+---
+
+### Debug 9: Backend Server Port Conflicts
+**Date**: 2025-11-26
+**Issue**: Frontend dev server started on port 3002 instead of 3000, images not loading
+**Debugging Prompt**:
+```
+User reports images disappeared from pages.
+Frontend running on port 3002 instead of 3000.
+Backend may not be responding on port 3001.
+
+Check:
+1. What processes are occupying ports 3000 and 3001
+2. If backend server is running and responding
+3. If frontend is trying to fetch from correct backend URL
+```
+
+**Root Cause**: Multiple dev server instances running, backend server stopped responding
+
+**Solution**:
+- Kill processes on ports 3000 and 3001: `lsof -ti:3000,3001 | xargs kill -9`
+- Restart backend server: `cd backend && npm run dev`
+- Restart frontend on port 3000: `cd frontend && npm run dev`
+
+---
+
+**Last Updated**: 2025-11-26
 
 ---
 
 ## Statistics
 
-**Total Prompts Used**: 23
+**Total Prompts Used**: 29
 - Smart Contract Development: 5 prompts (including multi-currency updates)
-- AI Integration: 2 prompts
-- Frontend Development: 5 prompts (including price conversion)
-- Backend Development: 3 prompts (including CoinMarketCap API)
-- Debugging & Bug Fixes: 7 prompts
+- AI Integration: 4 prompts (including GPT-4 Vision)
+- Frontend Development: 8 prompts (including image galleries)
+- Backend Development: 4 prompts (including image upload)
+- Debugging & Bug Fixes: 9 prompts
 - Testing: 1 prompt (TBD)
 
 **Success Rate**: 100% (all features implemented successfully)
-**Major Bugs Fixed**: 7
-**Development Time**: ~52 hours (Nov 12-14, 2025)
-**Lines of Code**: ~4,200+
-**Contracts Deployed**: 4 (with 1 major update)
-**Contract Redeployments**: 1 (multi-currency support)
-**AI Model Used**: Claude Sonnet 4.5 (claude-code)
+**Major Bugs Fixed**: 9
+**Development Time**: ~65 hours (Nov 12-26, 2025)
+**Lines of Code**: ~5,800+
+**Contracts Deployed**: 4 (v4.0 with required deadlines and escrow)
+**Backend/Frontend Updates**: v4.1 (image upload system)
+**AI Models Used**:
+- Claude Sonnet 4.5 (claude-code) for development
+- OpenAI GPT-4 for charity verification
+- OpenAI GPT-4 Vision for image analysis
