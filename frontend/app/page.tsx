@@ -332,7 +332,7 @@ function FeaturedCauseCard({ charityId }: { charityId: number }) {
 
   // Fetch charity images
   const [images, setImages] = useState<string[]>([]);
-  const [loadingImages, setLoadingImages] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     async function fetchImages() {
@@ -344,8 +344,6 @@ function FeaturedCauseCard({ charityId }: { charityId: number }) {
         }
       } catch (error) {
         console.error('Failed to fetch images:', error);
-      } finally {
-        setLoadingImages(false);
       }
     }
     fetchImages();
@@ -372,17 +370,13 @@ function FeaturedCauseCard({ charityId }: { charityId: number }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white overflow-hidden hover:shadow-lg transition-shadow">
       {/* Charity Image */}
-      {images.length > 0 ? (
+      {images.length > 0 && !imageError ? (
         <div className="relative h-48 w-full overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100">
           <img
             src={images[0]}
             alt={charity.name}
             className="w-full h-full object-cover"
-            onError={(e) => {
-              // Fallback if image fails to load
-              e.currentTarget.style.display = 'none';
-              e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-6xl">🤝</div>';
-            }}
+            onError={() => setImageError(true)}
           />
         </div>
       ) : (

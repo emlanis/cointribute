@@ -15,6 +15,11 @@ Cointribute is a transparent, AI-vetted charity donation platform built on Base 
   - AI scores 0-100 using GPT-4
   - Score >= 60 → Automatic approval ✅
   - Score < 60 → Automatic rejection ❌
+- 📸 **Image Upload & AI Vision Analysis**: Charities can upload campaign images
+  - Up to 5 images per charity (JPG, PNG, WebP)
+  - GPT-4 Vision API analyzes image relevance and quality
+  - Social media-style image galleries on all pages
+  - Automatic image optimization and processing
 - 🔒 **Smart Fund Escrow**: Donations held securely until release
   - Funds released when **goal reached** OR **deadline passed**
   - Transparent fund tracking per campaign
@@ -91,9 +96,9 @@ ERC721 NFTs for high-impact donors with dynamic metadata.
 ## Current Deployment
 
 **Network**: Base Sepolia Testnet
-**Version**: v4.0 - Smart Fund Release System
+**Version**: v4.1 - Image Upload & Display System
 **Status**: ✅ **FULLY OPERATIONAL**
-**Last Updated**: November 25, 2025
+**Last Updated**: November 26, 2025
 
 ### Live Contract Addresses
 

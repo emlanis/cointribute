@@ -3,8 +3,8 @@
 ## Current Deployment Status
 
 **Network**: Base Sepolia Testnet
-**Date**: November 25, 2025
-**Version**: v4.0 - Smart Fund Release System
+**Date**: November 26, 2025
+**Version**: v4.1 - Image Upload & Display System
 **Status**: ✅ **FULLY OPERATIONAL**
 
 ## Contract Addresses
@@ -48,12 +48,15 @@ Deployer Address: 0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4
 
 #### Backend Services
 - **URL**: http://localhost:3001
-- **AI Model**: OpenAI GPT-4
+- **AI Model**: OpenAI GPT-4 + GPT-4 Vision
 - **Features**:
   - Real-time event listening
   - Automatic charity verification
+  - Image upload processing (Multer + Sharp)
+  - GPT-4 Vision image analysis
   - CoinMarketCap price integration
   - Historical charity scanning
+  - Static file serving for images
 
 #### Frontend Application
 - **URL**: http://localhost:3000
@@ -63,7 +66,22 @@ Deployer Address: 0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4
 
 ## Deployment History
 
-### v4.0 - November 25, 2025 (CURRENT)
+### v4.1 - November 26, 2025 (CURRENT)
+**Contracts**: Same as v4.0 (no contract changes)
+**Backend**: Enhanced with image upload system
+**Frontend**: Enhanced with image display galleries
+
+**Major Changes**:
+- **Image Upload System**: Charities can upload up to 5 campaign images
+- **GPT-4 Vision Integration**: AI analyzes uploaded images for relevance and quality
+- **Image Processing**: Automatic optimization using Multer + Sharp
+- **Social Media-Style Galleries**: Image display on all pages with navigation
+- **Backend API Endpoints**: `/api/upload-images` and `/api/charity-images/:id`
+- **Local Storage**: Images stored in `/backend/uploads/` directory
+- **Registry System**: JSON-based mapping of charityId to image URLs
+- **Enhanced Verification**: Images now contribute to overall AI verification score
+
+### v4.0 - November 25, 2025
 **CharityRegistry**: `0x3c921FCB6E75bDD7C0386D14CA5594030D7e6df0`
 **DonationManager**: `0xF2B1F17C3695cea507CE9F1fe76598c834bf3fb2`
 **VibeToken**: `0x5d1475a5afA0Ac0350a4FA58049E3F0C466d3c47`
