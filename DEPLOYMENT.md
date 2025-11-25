@@ -2,8 +2,9 @@
 
 ## Current Deployment Status
 
-**Network**: Base Sepolia Testnet  
-**Date**: November 25, 2025  
+**Network**: Base Sepolia Testnet
+**Date**: November 25, 2025
+**Version**: v4.0 - Smart Fund Release System
 **Status**: ✅ **FULLY OPERATIONAL**
 
 ## Contract Addresses
@@ -14,10 +15,10 @@
 Network: Base Sepolia (Chain ID: 84532)
 RPC: https://sepolia.base.org
 
-CharityRegistry:  0xc8928b40C1A494E1f039665E6f0C2ce64681254a
-VibeToken:        0xc2780b90e32aAf93f7829929ac3A234Bc49617B6
-ImpactNFT:        0xc241E5103a6B1E404024ADbA170C4Ca81003B459
-DonationManager:  0x2d70ECd4ee1010Ac4CE53b5a284eC0e3c96Ed748
+CharityRegistry:  0x3c921FCB6E75bDD7C0386D14CA5594030D7e6df0
+VibeToken:        0x5d1475a5afA0Ac0350a4FA58049E3F0C466d3c47
+ImpactNFT:        0x4cf4C4af3c8A2bacE821Ddc720248CEfd3d51213
+DonationManager:  0xF2B1F17C3695cea507CE9F1fe76598c834bf3fb2
 USDC (Testnet):   0x036CbD53842c5426634e7929541eC2318f3dCF7e
 
 Deployer Address: 0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4
@@ -25,13 +26,25 @@ Deployer Address: 0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4
 
 ### Contract Features
 
-#### CharityRegistry v3.0
+#### CharityRegistry v4.0
 - ✅ Fully automatic AI verification (no manual approval)
 - ✅ Multi-charity registration per wallet
 - ✅ 3-month cooldown between registrations
 - ✅ Active charity check (prevents multiple active campaigns)
+- ✅ **REQUIRED campaign deadlines** (no longer optional)
 - ✅ Minimum AI score: 60 for auto-approval
 - ✅ Image upload support (IPFS hash storage)
+
+#### DonationManager v4.0
+- ✅ **Smart escrow system** - funds held until release
+- ✅ **Automatic release on goal reached** (even before deadline)
+- ✅ **Automatic release on deadline passed** (regardless of goal)
+- ✅ Separate ETH and USDC fund tracking
+- ✅ Platform fee collection (2.5%) at release time
+- ✅ Public `releaseFunds()` function
+- ✅ `getCharityFunds()` view for transparency
+- ✅ `finalizeCharity()` admin function
+- ✅ Multi-token support (ETH + USDC)
 
 #### Backend Services
 - **URL**: http://localhost:3001
@@ -50,7 +63,21 @@ Deployer Address: 0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4
 
 ## Deployment History
 
-### v3.0 - November 25, 2025 (CURRENT)
+### v4.0 - November 25, 2025 (CURRENT)
+**CharityRegistry**: `0x3c921FCB6E75bDD7C0386D14CA5594030D7e6df0`
+**DonationManager**: `0xF2B1F17C3695cea507CE9F1fe76598c834bf3fb2`
+**VibeToken**: `0x5d1475a5afA0Ac0350a4FA58049E3F0C466d3c47`
+**ImpactNFT**: `0x4cf4C4af3c8A2bacE821Ddc720248CEfd3d51213`
+
+**Major Changes**:
+- **Smart Fund Holding**: Donations held in escrow until release
+- **Dual Release Mechanism**: Funds released when goal reached OR deadline passed
+- **Required Deadlines**: All campaigns must set a deadline (no longer optional)
+- **Transparent Fund Tracking**: `CharityFunds` struct for each charity
+- **Public Release Function**: Anyone can trigger `releaseFunds()` when conditions met
+- **Enhanced UI**: Fund release explanation section on cause pages
+
+### v3.0 - November 25, 2025
 **CharityRegistry**: `0xc8928b40C1A494E1f039665E6f0C2ce64681254a`
 
 **Changes**:
@@ -162,28 +189,28 @@ npm run dev
 ### Contract Verification on Basescan
 
 ```bash
-# CharityRegistry
+# CharityRegistry v4.0
 npx hardhat verify --network baseSepolia \
-  0xc8928b40C1A494E1f039665E6f0C2ce64681254a \
+  0x3c921FCB6E75bDD7C0386D14CA5594030D7e6df0 \
   0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4
 
 # VibeToken
 npx hardhat verify --network baseSepolia \
-  0xc2780b90e32aAf93f7829929ac3A234Bc49617B6 \
+  0x5d1475a5afA0Ac0350a4FA58049E3F0C466d3c47 \
   0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4
 
 # ImpactNFT
 npx hardhat verify --network baseSepolia \
-  0xc241E5103a6B1E404024ADbA170C4Ca81003B459 \
+  0x4cf4C4af3c8A2bacE821Ddc720248CEfd3d51213 \
   0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4 \
   "https://api.cointribute.xyz/metadata"
 
-# DonationManager
+# DonationManager v4.0
 npx hardhat verify --network baseSepolia \
-  0x2d70ECd4ee1010Ac4CE53b5a284eC0e3c96Ed748 \
-  0xc8928b40C1A494E1f039665E6f0C2ce64681254a \
-  0xc2780b90e32aAf93f7829929ac3A234Bc49617B6 \
-  0xc241E5103a6B1E404024ADbA170C4Ca81003B459 \
+  0xF2B1F17C3695cea507CE9F1fe76598c834bf3fb2 \
+  0x3c921FCB6E75bDD7C0386D14CA5594030D7e6df0 \
+  0x5d1475a5afA0Ac0350a4FA58049E3F0C466d3c47 \
+  0x4cf4C4af3c8A2bacE821Ddc720248CEfd3d51213 \
   0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4 \
   0x29Dc0B53e65048e0f11C9F21Eb33e444b1b84EB4
 ```

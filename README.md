@@ -15,6 +15,13 @@ Cointribute is a transparent, AI-vetted charity donation platform built on Base 
   - AI scores 0-100 using GPT-4
   - Score >= 60 → Automatic approval ✅
   - Score < 60 → Automatic rejection ❌
+- 🔒 **Smart Fund Escrow**: Donations held securely until release
+  - Funds released when **goal reached** OR **deadline passed**
+  - Transparent fund tracking per campaign
+  - Platform fee (2.5%) deducted at release
+- ⏰ **Required Campaign Deadlines**: All campaigns must set a target deadline
+  - Ensures accountability and time-bound goals
+  - Automatic fund release on deadline
 - 🔗 **Smart Contract Donations**: Transparent, immutable donation tracking
 - 🏢 **Multi-Charity Support**: Same wallet can register multiple charities
   - 3-month cooldown between registrations
@@ -73,7 +80,7 @@ cointribute/
 Manages charity registration, verification, and AI vetting scores.
 
 ### DonationManager.sol
-Handles donation processing, fund distribution, and milestone releases.
+Handles donation processing with smart escrow, automatic fund releases when goal reached or deadline passed, and platform fee collection.
 
 ### VibeToken.sol
 ERC20 governance and reward token with staking capabilities.
@@ -84,26 +91,31 @@ ERC721 NFTs for high-impact donors with dynamic metadata.
 ## Current Deployment
 
 **Network**: Base Sepolia Testnet
+**Version**: v4.0 - Smart Fund Release System
 **Status**: ✅ **FULLY OPERATIONAL**
 **Last Updated**: November 25, 2025
 
 ### Live Contract Addresses
 
 ```
-CharityRegistry:  0xc8928b40C1A494E1f039665E6f0C2ce64681254a
-VibeToken:        0xc2780b90e32aAf93f7829929ac3A234Bc49617B6
-ImpactNFT:        0xc241E5103a6B1E404024ADbA170C4Ca81003B459
-DonationManager:  0x2d70ECd4ee1010Ac4CE53b5a284eC0e3c96Ed748
+CharityRegistry:  0x3c921FCB6E75bDD7C0386D14CA5594030D7e6df0
+VibeToken:        0x5d1475a5afA0Ac0350a4FA58049E3F0C466d3c47
+ImpactNFT:        0x4cf4C4af3c8A2bacE821Ddc720248CEfd3d51213
+DonationManager:  0xF2B1F17C3695cea507CE9F1fe76598c834bf3fb2
 ```
 
-### What's New in v3.0
+### What's New in v4.0
+- ✅ **Smart Fund Escrow** - Donations held until goal OR deadline
+- ✅ **Dual Release Mechanism** - Automatic release when either condition met
+- ✅ **Required Deadlines** - All campaigns must set a deadline
+- ✅ **Transparent Fund Tracking** - View held funds per charity
 - ✅ **Fully automatic AI verification** - No manual approval needed!
 - ✅ **5-10 second approval time** - Lightning fast
 - ✅ **Multi-charity per wallet** - With smart 3-month cooldown
 - ✅ **Gas optimized** - Only ~343k gas per registration
-- ✅ **Zero pending charities** - Everything processes automatically
 
-[View on Base Sepolia Basescan →](https://sepolia.basescan.org/address/0xc8928b40C1A494E1f039665E6f0C2ce64681254a)
+[View CharityRegistry on Basescan →](https://sepolia.basescan.org/address/0x3c921FCB6E75bDD7C0386D14CA5594030D7e6df0)
+[View DonationManager on Basescan →](https://sepolia.basescan.org/address/0xF2B1F17C3695cea507CE9F1fe76598c834bf3fb2)
 
 ## Quick Start
 

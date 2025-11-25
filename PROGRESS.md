@@ -2,13 +2,51 @@
 
 ## Latest Update: November 25, 2025
 
-### ✅ Major Milestone: Fully Automatic AI Verification System
+### ✅ Major Milestone: Smart Fund Holding & Automatic Release System
 
-## Recent Achievements (Nov 24-25, 2025)
+## Recent Achievements (Nov 25, 2025)
 
-### 🎯 Core System Fixes
+### 🎯 LATEST: Smart Fund Holding & Release System
 
-#### 1. **Automatic AI Verification & Approval** ✅
+#### 1. **Escrow-Based Fund Management** ✅
+- **Problem**: Donations were sent instantly to charities - no accountability for reaching goals or meeting deadlines
+- **Solution**: Implemented smart contract escrow system with automatic release conditions
+- **How It Works**:
+  - 💰 Donations are **held securely** in the DonationManager contract
+  - 🔓 Funds **automatically released** when EITHER condition is met:
+    - ✅ **Goal Reached**: Campaign target hit (even before deadline)
+    - ✅ **Deadline Passed**: Campaign time ends (funds released regardless of target)
+  - 💸 Platform fee (2.5%) deducted at release time
+  - 🏦 Charity receives 97.5% of donations to their wallet
+
+#### 2. **Required Campaign Deadlines** ✅
+- **Problem**: Campaigns could run indefinitely with optional deadlines (deadline = 0)
+- **Solution**: Made deadlines REQUIRED for all campaigns
+- **Implementation**:
+  - ✅ Every campaign MUST set a deadline
+  - ✅ Deadline must be in the future
+  - ✅ Contract validation: `require(_deadline > 0, "Deadline is required")`
+  - ✅ Frontend form validation added
+
+#### 3. **Fund Tracking & Transparency** ✅
+- **New CharityFunds Struct** tracks per-charity:
+  - `ethBalance` - Held ETH donations
+  - `usdcBalance` - Held USDC donations
+  - `ethFees` - Accumulated ETH platform fees
+  - `usdcFees` - Accumulated USDC platform fees
+  - `fundsReleased` - Whether funds have been released
+  - `releasedAt` - Timestamp of fund release
+
+#### 4. **Frontend Improvements** ✅
+- **Smart Fund Release Section** on cause detail pages
+- Explains escrow mechanism and release conditions
+- Shows charity wallet address with copy button
+- Displays campaign status and deadline countdown
+- Donor protection messaging
+
+### 🎯 Previous System Improvements
+
+#### 5. **Automatic AI Verification & Approval** ✅
 - **Problem**: Multi-signature approval system caused charities to remain "Pending" even after AI scoring
 - **Solution**: Removed manual approval requirements, made verification fully automatic
 - **Implementation**:
@@ -69,19 +107,21 @@ Total time: 5-10 seconds
 
 **Network**: Base Sepolia Testnet
 
-#### Latest Deployment (Nov 25, 2025)
+#### Latest Deployment v4.0 (Nov 25, 2025)
 ```
-CharityRegistry:  0xc8928b40C1A494E1f039665E6f0C2ce64681254a
-VibeToken:        0xc2780b90e32aAf93f7829929ac3A234Bc49617B6
-ImpactNFT:        0xc241E5103a6B1E404024ADbA170C4Ca81003B459
-DonationManager:  0x2d70ECd4ee1010Ac4CE53b5a284eC0e3c96Ed748
+CharityRegistry:  0x3c921FCB6E75bDD7C0386D14CA5594030D7e6df0
+VibeToken:        0x5d1475a5afA0Ac0350a4FA58049E3F0C466d3c47
+ImpactNFT:        0x4cf4C4af3c8A2bacE821Ddc720248CEfd3d51213
+DonationManager:  0xF2B1F17C3695cea507CE9F1fe76598c834bf3fb2
 ```
 
 **Features**:
+- ✅ Smart fund holding with escrow
+- ✅ Automatic release on goal OR deadline
+- ✅ Required campaign deadlines
 - ✅ Fully automatic AI verification
 - ✅ Multi-charity per wallet with cooldown
 - ✅ Optimized gas usage
-- ✅ No manual approval needed
 
 ### 🐛 Bugs Fixed
 
@@ -103,23 +143,30 @@ DonationManager:  0x2d70ECd4ee1010Ac4CE53b5a284eC0e3c96Ed748
 
 ### 🔮 Next Steps
 
-1. **Image Upload Feature** 🎨
+1. **Testing Smart Fund Release** 🧪
+   - Test goal-based fund release (when target reached)
+   - Test deadline-based fund release (when time expires)
+   - Verify fund calculations (97.5% to charity, 2.5% fee)
+   - Test edge cases (goal + deadline simultaneously)
+
+2. **Image Upload Feature** 🎨
    - Allow charity registerers to upload campaign images
    - Store images on IPFS
    - Display images on charity cards
    - Make campaigns more appealing and trustworthy
 
-2. **Frontend Improvements**
-   - Display approval status updates in real-time
-   - Show AI verification progress
-   - Add image galleries for charities
+3. **Frontend Enhancements**
+   - Display real-time fund release status
+   - Show held vs released funds
+   - Add fund release transaction history
+   - Campaign countdown timers
 
-3. **Testing & Optimization**
+4. **Testing & Optimization**
    - Comprehensive end-to-end testing
-   - Gas optimization
+   - Gas optimization for fund release
    - Security audit preparation
 
 ---
 
 *Last updated: November 25, 2025*
-*Next milestone: Image Upload Feature*
+*Next milestone: Testing Smart Fund Release System*

@@ -1,16 +1,18 @@
 # Cointribute Project Status
 
-**Last Updated**: November 25, 2025, 11:30 PM UTC  
-**Overall Status**: ✅ **CORE SYSTEM OPERATIONAL**
+**Last Updated**: November 25, 2025, 11:59 PM UTC
+**Overall Status**: ✅ **CORE SYSTEM OPERATIONAL + SMART FUND RELEASE**
 
 ## System Health
 
 | Component | Status | Health | Notes |
 |-----------|--------|--------|-------|
-| CharityRegistry Contract | ✅ Live | 100% | Fully automatic, v3.0 deployed |
+| CharityRegistry Contract | ✅ Live | 100% | v4.0 with required deadlines |
+| DonationManager Contract | ✅ Live | 100% | Smart escrow + auto-release |
 | AI Verification Backend | ✅ Running | 100% | Processing in 3-5 seconds |
-| Frontend Application | ✅ Live | 100% | Real-time updates working |
+| Frontend Application | ✅ Live | 100% | Fund release UI added |
 | Event Listening | ✅ Active | 100% | Detecting registrations instantly |
+| Fund Release System | ✅ Active | 100% | Auto-release on goal OR deadline |
 | IPFS Integration | ⏳ Pending | 0% | Ready for image upload feature |
 
 ## Feature Completion
@@ -51,12 +53,33 @@
 - [x] ReentrancyGuard protection
 - [x] Role-based access control
 
-#### 5. Frontend UI ✅
+#### 5. Smart Fund Release System ✅
+- [x] Escrow-based fund holding in DonationManager
+- [x] Automatic release when goal reached
+- [x] Automatic release when deadline passes
+- [x] Separate tracking for ETH and USDC funds
+- [x] Platform fee collection at release time
+- [x] Public `releaseFunds()` function (anyone can trigger)
+- [x] `getCharityFunds()` view function for transparency
+- [x] `finalizeCharity()` admin function to close campaigns
+- [x] Fund release events and logging
+
+#### 6. Campaign Management ✅
+- [x] Required deadlines for all campaigns
+- [x] Frontend validation for future deadlines
+- [x] Campaign status tracking
+- [x] Deadline countdown display
+- [x] Goal vs raised progress tracking
+
+#### 7. Frontend UI ✅
 - [x] Homepage with charity showcase
-- [x] Charity registration form
+- [x] Charity registration form with required deadline
 - [x] Wallet connection
 - [x] Donation interface
 - [x] Real-time status updates
+- [x] Smart Fund Release explanation section
+- [x] Charity wallet address display with copy
+- [x] Campaign deadline display
 - [x] Responsive design (mobile-first)
 
 ### ⏳ In Progress
@@ -135,11 +158,12 @@ None! All critical bugs have been fixed.
 ## Team Productivity
 
 ### Recent Sprint (Nov 24-25)
-- **Duration**: 24 hours
-- **Commits**: 15+
-- **Features Completed**: 4 major features
+- **Duration**: 2 days
+- **Commits**: 20+
+- **Features Completed**: 6 major features
 - **Bugs Fixed**: 6 critical bugs
-- **Contract Deployments**: 3 versions
+- **Contract Deployments**: 4 versions (v1.0 → v4.0)
+- **Latest Achievement**: Smart Fund Release System
 
 ### Blockers Resolved
 1. ✅ Multi-sig approval complexity (removed)
@@ -170,9 +194,13 @@ None! All critical bugs have been fixed.
 ### This Week
 - [x] Fix automatic AI approval system
 - [x] Resolve all critical bugs
+- [x] Implement smart fund holding system
+- [x] Add automatic fund release (goal OR deadline)
+- [x] Make campaign deadlines required
+- [x] Update frontend with fund release UI
 - [x] Update documentation
+- [ ] Test fund release scenarios
 - [ ] Implement image upload feature
-- [ ] Test image upload end-to-end
 
 ### Next Week
 - [ ] Comprehensive testing suite
@@ -204,8 +232,11 @@ None! All critical bugs have been fixed.
 
 ## Resources
 
-### Contract Addresses
-- **CharityRegistry**: `0xc8928b40C1A494E1f039665E6f0C2ce64681254a`
+### Contract Addresses (v4.0)
+- **CharityRegistry**: `0x3c921FCB6E75bDD7C0386D14CA5594030D7e6df0`
+- **DonationManager**: `0xF2B1F17C3695cea507CE9F1fe76598c834bf3fb2`
+- **VibeToken**: `0x5d1475a5afA0Ac0350a4FA58049E3F0C466d3c47`
+- **ImpactNFT**: `0x4cf4C4af3c8A2bacE821Ddc720248CEfd3d51213`
 - **Base Sepolia Explorer**: https://sepolia.basescan.org
 
 ### Documentation
