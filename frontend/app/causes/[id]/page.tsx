@@ -10,6 +10,27 @@ import { useUSDCEquivalent } from '@/hooks/usePriceConversion';
 
 type Currency = 'ETH' | 'USDC';
 
+// Type definition for charity data from contract
+interface CharityData {
+  name: string;
+  description: string;
+  ipfsHash: string;
+  walletAddress: string;
+  aiScore: bigint;
+  status: number;
+  registeredAt: bigint;
+  verifiedAt: bigint;
+  verifiedBy: string;
+  totalDonationsReceived: bigint;
+  donorCount: bigint;
+  fundingGoal: bigint;
+  deadline: bigint;
+  isActive: boolean;
+  totalETHDonations: bigint;
+  totalUSDCDonations: bigint;
+  imageHashes: string[];
+}
+
 export default function CauseDetailPage() {
   const params = useParams();
   const causeId = params.id as string;
@@ -40,7 +61,7 @@ export default function CauseDetailPage() {
     ...charityRegistry,
     functionName: 'getCharity',
     args: [BigInt(causeId)],
-  });
+  }) as { data: CharityData | undefined };
 
   // Get ETH and USDC amounts from contract (use default values if charity not loaded yet)
   const ethDonations = charity?.totalETHDonations || BigInt(0);

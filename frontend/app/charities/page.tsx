@@ -7,6 +7,27 @@ import { formatEther } from 'viem';
 import { useUSDCEquivalent } from '@/hooks/usePriceConversion';
 import { useState, useEffect } from 'react';
 
+// Type definition for charity data from contract
+interface CharityData {
+  name: string;
+  description: string;
+  ipfsHash: string;
+  walletAddress: string;
+  aiScore: bigint;
+  status: number;
+  registeredAt: bigint;
+  verifiedAt: bigint;
+  verifiedBy: string;
+  totalDonationsReceived: bigint;
+  donorCount: bigint;
+  fundingGoal: bigint;
+  deadline: bigint;
+  isActive: boolean;
+  totalETHDonations: bigint;
+  totalUSDCDonations: bigint;
+  imageHashes: string[];
+}
+
 export default function CharitiesPage() {
   // Read total charities count
   const { data: charityCount } = useReadContract({
@@ -92,7 +113,7 @@ function CharityCard({ charityId }: { charityId: number }) {
     ...charityRegistry,
     functionName: 'getCharity',
     args: [BigInt(charityId)],
-  });
+  }) as { data: CharityData | undefined; isLoading: boolean };
 
   // Fetch charity images
   const [images, setImages] = useState<string[]>([]);

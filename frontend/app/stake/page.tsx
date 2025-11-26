@@ -22,21 +22,21 @@ export default function StakePage() {
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: { enabled: !!address },
-  });
+  }) as { data: bigint | undefined };
 
   const { data: stakingInfo } = useReadContract({
     ...vibeToken,
     functionName: 'getStakingInfo',
     args: address ? [address] : undefined,
     query: { enabled: !!address },
-  });
+  }) as { data: readonly [bigint, bigint, bigint] | undefined };
 
   const { data: userStakes } = useReadContract({
     ...vibeToken,
     functionName: 'getUserStakes',
     args: address ? [address] : undefined,
     query: { enabled: !!address },
-  });
+  }) as { data: any[] | undefined };
 
   const { writeContract: approveWrite, data: approveHash } = useWriteContract();
   const { writeContract: stakeWrite, data: stakeHash, isPending: isStaking } = useWriteContract();

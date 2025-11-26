@@ -3,13 +3,34 @@
 import { MainLayout } from '@/components/MainLayout';
 import { charityRegistry, donationManager, usdc, CONTRACT_ADDRESSES } from '@/lib/contracts';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { parseEther, formatEther, parseUnits, formatUnits } from 'viem';
 import { useSearchParams } from 'next/navigation';
 
 type Currency = 'ETH' | 'USDC';
 
-export default function DonatePage() {
+// Type definition for charity data from contract
+interface CharityData {
+  name: string;
+  description: string;
+  ipfsHash: string;
+  walletAddress: string;
+  aiScore: bigint;
+  status: number;
+  registeredAt: bigint;
+  verifiedAt: bigint;
+  verifiedBy: string;
+  totalDonationsReceived: bigint;
+  donorCount: bigint;
+  fundingGoal: bigint;
+  deadline: bigint;
+  isActive: boolean;
+  totalETHDonations: bigint;
+  totalUSDCDonations: bigint;
+  imageHashes: string[];
+}
+
+function DonatePageContent() {
   const searchParams = useSearchParams();
   const preselectedCharityId = searchParams.get('charity');
   const { address } = useAccount();
@@ -32,7 +53,7 @@ export default function DonatePage() {
     query: {
       enabled: !!selectedCharityId,
     },
-  });
+  }) as { data: CharityData | undefined };
 
   // Read USDC balance
   const { data: usdcBalance } = useReadContract({
@@ -374,7 +395,7 @@ function CharityOption({ charityId }: { charityId: number }) {
     ...charityRegistry,
     functionName: 'getCharity',
     args: [BigInt(charityId)],
-  });
+  }) as { data: CharityData | undefined };
 
   if (!charity) return null;
 
@@ -385,5 +406,13 @@ function CharityOption({ charityId }: { charityId: number }) {
     <option value={charityId}>
       {charity.name} (AI Score: {charity.aiScore.toString()}/100)
     </option>
+  );
+}
+
+export default function DonatePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DonatePageContent />
+    </Suspense>
   );
 }

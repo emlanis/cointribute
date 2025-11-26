@@ -5,6 +5,37 @@ import { impactNFT, charityRegistry } from '@/lib/contracts';
 import { useReadContract, useAccount } from 'wagmi';
 import { formatEther } from 'viem';
 
+// Type definitions
+interface CharityData {
+  name: string;
+  description: string;
+  ipfsHash: string;
+  walletAddress: string;
+  aiScore: bigint;
+  status: number;
+  registeredAt: bigint;
+  verifiedAt: bigint;
+  verifiedBy: string;
+  totalDonationsReceived: bigint;
+  donorCount: bigint;
+  fundingGoal: bigint;
+  deadline: bigint;
+  isActive: boolean;
+  totalETHDonations: bigint;
+  totalUSDCDonations: bigint;
+  imageHashes: string[];
+}
+
+interface ImpactMetadata {
+  donor: string;
+  charityId: bigint;
+  totalImpact: bigint;
+  tier: number;
+  mintedAt: bigint;
+  lastUpdated: bigint;
+  ipfsMetadataHash: string;
+}
+
 export default function NFTsPage() {
   const { address } = useAccount();
 
@@ -13,14 +44,14 @@ export default function NFTsPage() {
     functionName: 'getDonorNFTs',
     args: address ? [address] : undefined,
     query: { enabled: !!address },
-  });
+  }) as { data: bigint[] | undefined };
 
   const { data: totalImpact } = useReadContract({
     ...impactNFT,
     functionName: 'getDonorTotalImpact',
     args: address ? [address] : undefined,
     query: { enabled: !!address },
-  });
+  }) as { data: bigint | undefined };
 
   const nftCount = nftIds ? nftIds.length : 0;
   const totalImpactFormatted = totalImpact ? formatEther(totalImpact) : '0';
@@ -108,14 +139,14 @@ function NFTCard({ tokenId }: { tokenId: bigint }) {
     ...impactNFT,
     functionName: 'getMetadata',
     args: [tokenId],
-  });
+  }) as { data: ImpactMetadata | undefined };
 
   const { data: charity } = useReadContract({
     ...charityRegistry,
     functionName: 'getCharity',
     args: metadata ? [metadata.charityId] : undefined,
     query: { enabled: !!metadata },
-  });
+  }) as { data: CharityData | undefined };
 
   if (!metadata) {
     return (
